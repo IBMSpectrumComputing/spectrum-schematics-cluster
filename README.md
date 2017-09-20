@@ -11,7 +11,7 @@ This repository can be forked or directly used in IBM Bluemix Schematics. You si
 
 ## Contents
 
-* default topology
+* Default Topology
 * Introduction
 * Usage
 * Release Notes
@@ -24,7 +24,7 @@ This repository can be forked or directly used in IBM Bluemix Schematics. You si
 
 ## Introduction
 
-To use IBM schematics, you need to gain certain information, here is the most important ones
+To use IBM schematics or Terraform with IBM Cloud Provider, you need to gain certain information, here is the most important ones
 
 - **ibm_bmx_api_key**
   - your api key for IBM Bluemix
@@ -40,6 +40,23 @@ To use IBM schematics, you need to gain certain information, here is the most im
   - you can obtain a trial entitlement if you do not have one
 
 ## Usage
+
+### Usage with IBM Cloud Schematics
+
+Follow the instructions on the [Getting Started with IBM Cloud Schematics](https://console.ng.bluemix.net/docs/services/schematics/index.html#gettingstarted) documentation page.
+
+### Usage with Terraform Binary on your local workstation
+You will need to [setup up IBM Cloud provider credentials](#setting-up-provider-credentials) on your local machine. Then you will need the [Terraform binary](https://www.terraform.io/intro/getting-started/install.html) and the [IBM Cloud Provider Plugin](https://github.com/IBM-Bluemix/terraform/releases). Then follow the instructions at [https://ibm-bluemix.github.io/tf-ibm-docs/v0.4.0/#developing-locally](https://ibm-bluemix.github.io/tf-ibm-docs/v0.4.0/#developing-locally).
+
+To run this project locally execute the following steps:
+
+- Supply required variable values in `terraform.tfvars`, see https://www.terraform.io/intro/getting-started/variables.html#from-a-file for instructions.
+  - Alternatively these values can be supplied via the command line or environment variables, see https://www.terraform.io/intro/getting-started/variables.html.
+- `terraform plan`: this will perform a dry run to show what infrastructure terraform intends to create
+- `terraform apply`: this will create actual infrastructure
+  - Infrastructure can be seen in IBM Bluemix under the following URLs:
+    - SSH keys: https://control.bluemix.net/devices/sshkeys
+- `terraform destroy`: this will destroy all infrastructure which has been created
 
 ### steps
 
@@ -114,6 +131,42 @@ To use IBM schematics, you need to gain certain information, here is the most im
   - **ibm_bmx_api_key**
   - **ibm_sl_username**, **ibm_sl_api_key**
   - **ssh_public_key**
+
+## Available Data Centers
+Any of these values is valid for use with the `datacenter` variable:
+- `ams01`: Amsterdam 1
+- `ams03`: Amsterdam 3
+- `che01`: Chennai 1
+- `dal01`: Dallas 1
+- `dal10`: Dallas 10
+- `dal12`: Dallas 12
+- `dal02`: Dallas 2
+- `dal05`: Dallas 5
+- `dal06`: Dallas 6
+- `dal07`: Dallas 7
+- `dal09`: Dallas 9
+- `fra02`: Frankfurt 2
+- `hkg02`: Hong Kong 2
+- `hou02`: Houston 2
+- `lon02`: London 2
+- `mel01`: Melbourne 1
+- `mex01`: Mexico 1
+- `mil01`: Milan 1
+- `mon01`: Montreal 1
+- `osl01`: Oslo 1
+- `par01`: Paris 1
+- `sjc01`: San Jose 1
+- `sjc03`: San Jose 3
+- `sao01`: Sao Paulo 1
+- `sea01`: Seattle 1
+- `seo01`: Seoul 1
+- `sng01`: Singapore 1
+- `syd01`: Sydney 1
+- `syd04`: Sydney 4
+- `tok02`: Tokyo 2
+- `tor01`: Toronto 1
+- `wdc01`: Washington 1
+- `wdc04`: Washington 4
 
 ## Community Contribution Requirements
 
