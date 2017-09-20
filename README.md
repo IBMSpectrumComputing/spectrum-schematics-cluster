@@ -15,6 +15,7 @@ This repository can be forked or directly used in IBM Bluemix Schematics. You si
 * Introduction
 * Usage
 * Release Notes
+* Available Datacenters
 * Community Contribution
 * Copyright
  
@@ -89,7 +90,7 @@ To run this project locally execute the following steps:
 |**ibm_bmx_api_key**|bluemix api key||
 |**ibm_sl_username**|softlayer username||
 |**ibm_sl_api_key**|softlayer api key||
-|datacenter|data center to create nodes in|tor01|
+|datacenter|data center to create nodes in|dal12|
 |hourly_billing_master|bill on hourly usage for master nodes|true|
 |hourly_billing_compute|bill on hourly usage for compute nodes|true|
 ||||

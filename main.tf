@@ -83,7 +83,7 @@ variable ibm_sl_api_key {
   description = "Your Softlayer API Key."
 }
 variable datacenter {
-  default = "tor01"
+  default = "dal12"
   description = "The datacenter to create resources in."
 }
 variable seporator {
