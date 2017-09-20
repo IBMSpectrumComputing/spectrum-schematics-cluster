@@ -30,10 +30,7 @@ ssh_public_key = ""
 # required variable entitlement
 # here you specify your entitlement for the product
 ###########################################################
-entitlement = [
-	"",
-	""
-		]
+entitlement = ""
 
 ## (optional)	spectrum computing product to install
 ## product = "symphony"

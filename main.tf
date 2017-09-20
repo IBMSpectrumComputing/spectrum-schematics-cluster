@@ -17,8 +17,8 @@ provider "ibm" {
 
 # Create an SSH key. The SSH key surfaces in the SoftLayer console under Devices > Manage > SSH Keys.
 resource "ibm_compute_ssh_key" "ssh_compute_key" {
-  label      = "${var.ssh_key_label}"
-  notes      = "${var.ssh_key_note}"
+  label      = "${var.ssh_key_label}_${var.ibm_sl_username}"
+  notes      = "${var.ssh_key_note} ${var.ibm_sl_username}"
   public_key = "${var.ssh_public_key}"
 }
 
@@ -34,7 +34,7 @@ resource "ibm_compute_vm_instance" "masters" {
   cores             = "${var.core_of_master}"
   memory            = "${var.memory_in_mb_master}" 
   count             = 1
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(join(var.seporator,var.entitlement))}\"}"
+  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 }
@@ -91,8 +91,10 @@ variable seporator {
   description = "join entitlement"
 }
 variable entitlement {
-  type = "list"
-  default = ["ego_base   3.6   dd/mm/yyyy   ()   ()   ()   ****************************************", "sym_advanced_edition   7.2   dd/mm/yyyy   ()   ()   ()   ****************************************"]
+  default = <<EOF
+ego_base   3.6   dd/mm/yyyy   ()   ()   ()   ****************************************
+sym_advanced_edition   7.2   dd/mm/yyyy   ()   ()   ()   ****************************************
+EOF
   description = "your entitlement file content here"
 }
 variable ssh_public_key {

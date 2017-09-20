@@ -38,7 +38,6 @@ To use IBM schematics, you need to gain certain information, here is the most im
 - **entitlement**
   - entitlement that enables use of the cluster software
   - you can obtain a trial entitlement if you do not have one
-  - the entitle file content is provided with a list, each line becomes an element of the list
 
 ## Usage
 
@@ -48,7 +47,7 @@ To use IBM schematics, you need to gain certain information, here is the most im
 - create new environment
   - Source Control URL: use your forked repository url
   - Variables (required)
-    - entitlement (update terraform.tfvars before we figure out how to do it in Schematics web GUI)
+    - entitlement
     - ibm_bmx_api_key
     - ibm_sl_username, ibm_sl_api_key
     - ssh_public_key
@@ -81,7 +80,7 @@ To use IBM schematics, you need to gain certain information, here is the most im
 |ssh_key_label|label for your ssh public key|ssh_compute_key|
 |ssh_key_note|description for your ssh public key|ssh key for cluster hosts|
 ||||
-|**entitlement**|entitlement content to use the product|["",""]|
+|**entitlement**|entitlement content to use the product|""|
 |product|cluster product to deploy|symphony|
 |version|version of the cluster product|latest|
 |cluster_admin|admin account of the cluster|egoadmin|
