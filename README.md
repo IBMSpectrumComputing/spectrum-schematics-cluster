@@ -73,6 +73,7 @@ To use IBM schematics, you need to gain certain information, here is the most im
 |**ibm_bmx_api_key**|bluemix api key||
 |**ibm_sl_username**|softlayer username||
 |**ibm_sl_api_key**|softlayer api key||
+|datacenter|data center to create nodes in|tor01|
 |hourly_billing_master|bill on hourly usage for master nodes|true|
 |hourly_billing_compute|bill on hourly usage for compute nodes|true|
 ||||
