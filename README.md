@@ -2,7 +2,7 @@
 
 Schematics is a template system for IBM Bluemix based on terraform
 
-This repository should be forked before used in IBM Bluemix Schematics. You simply update terraform.tfvars to provide your software entitlement and/or sensitive info (ssh publickey, bluemix api key, softlayer username and api key, for securit concern, you should use Schematics GUI for them), you can also fine controll with other terraform variables.
+This repository can be forked or directly used in IBM Bluemix Schematics. You simply update terraform.tfvars to provide your software entitlement and/or sensitive info (ssh publickey, bluemix api key, softlayer username and api key, for securit concern, you should use Schematics GUI for them), you can also fine control with other terraform variables.
 
 ## Release Information
 
