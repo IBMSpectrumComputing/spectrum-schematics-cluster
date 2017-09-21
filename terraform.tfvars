@@ -68,4 +68,3 @@ entitlement = ""
 ## memory_in_mb_compute = 4096
 ## (optional) specify if to resolve hostnames with intranet ip addresses
 ## use_intranet = true
-## use_intranet = true

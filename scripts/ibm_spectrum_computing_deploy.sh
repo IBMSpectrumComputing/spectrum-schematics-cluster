@@ -201,6 +201,15 @@ function install_symphony()
 	fi
 }
 
+function start_symphony()
+{
+	if [ "${ROLE}" == "symhead" -o "${ROLE}" == "symcompute" ]
+	then
+		LOG "\tstart symphony..."
+		service ego start
+	fi
+}
+
 function configure_symphony()
 {
 	SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
@@ -212,54 +221,30 @@ function configure_symphony()
 		then
 			LOG "configure symphony master ..."
 			LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}\""
-			cat << ENDF > /tmp/configego.sh
-#!/bin/bash
-
-su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}"
-ENDF
-			chmod +x /tmp/configego.sh
-			setsid /tmp/configego.sh
+			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}"
 			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/named.xml
 			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/wsg.xml
-			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/derby_service.xml
-			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/mrss.xml
-			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/plc_service.xml
-			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/purger_service.xml
-			sleep 10
 		elif [ "$ROLE" == "symcompute" ]
 		then
 			LOG "configure symphony compute node ..."
 			LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f\""
-			cat << ENDF > /tmp/configego.sh
-#!/bin/bash
-
-su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f"
-ENDF
-			chmod +x /tmp/configego.sh
-			setsid /tmp/configego.sh
-			sleep 10
+			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f"
 		elif [ "$ROLE" == "symde" ]
 		then
 			LOG "configure symphony de node ..."
+			echo "to implement"
 		else
 			echo nothing to do
 		fi
 	fi
 	if [ "${ROLE}" == "symhead" -o "${ROLE}" == "symcompute" ]
 	then
-		cat << ENDF > /tmp/startego.sh
-#!/bin/bash
-
-. ${SOURCE_PROFILE}
-egosetrc.sh
-egosetsudoers.sh
-sleep 2
-service ego start
-ENDF
-		chmod +x /tmp/startego.sh
-		setsid /tmp/startego.sh
 		LOG "start symphony cluster ..."
-		LOG "\tegosetrc.sh; egosetsudoers.sh; service ego start"
+		LOG "\tegosetrc.sh; egosetsudoers.sh"
+		. ${SOURCE_PROFILE}
+		egosetrc.sh
+		egosetsudoers.sh
+		sleep 2
 	fi
 }
 
@@ -404,6 +389,7 @@ if [ "$PRODUCT" == "SYMPHONY" -o "$PRODUCT" == "symphony" ]
 then
 	install_symphony >> $LOG_FILE 2>&1
 	configure_symphony >> $LOG_FILE 2>&1
+	start_symphony >> $LOG_FILE 2>&1
 	SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
 	sleep 200
 	## watch 5 times to make sure symhony service is running
