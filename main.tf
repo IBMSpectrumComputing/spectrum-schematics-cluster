@@ -196,6 +196,7 @@ variable post_install_script_uri {
   default = "https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/scripts/ibm_spectrum_computing_deploy.sh"
   description = "uri to the deployment script"
 }
+##
 
 ##############################################################################
 # Outputs
