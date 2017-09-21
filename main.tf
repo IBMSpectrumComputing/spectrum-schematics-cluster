@@ -35,7 +35,7 @@ resource "ibm_compute_bare_metal" "masters" {
   count             = "${var.master_use_baremetal ? 1 : 0}"
   user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
-  private_network_only        = false
+  private_network_only        = true
 }
 # Create virtual servers with the SSH key.
 resource "ibm_compute_vm_instance" "masters" {
@@ -51,7 +51,7 @@ resource "ibm_compute_vm_instance" "masters" {
   count             = "${var.master_use_baremetal ? 0 : 1}"
   user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
-  private_network_only        = false
+  private_network_only        = true
 }
 
 resource "ibm_compute_vm_instance" "slaves" {
@@ -67,7 +67,7 @@ resource "ibm_compute_vm_instance" "slaves" {
   count             = "${var.number_of_compute}"
   user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${ibm_compute_vm_instance.masters.0.hostname}\", \"masteripaddress\":\"${var.use_intranet ? ibm_compute_vm_instance.masters.0.ipv4_address_private : ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
-  private_network_only        = false
+  private_network_only        = true
 }
 
 resource "ibm_compute_vm_instance" "dehosts" {
