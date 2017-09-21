@@ -66,5 +66,13 @@ entitlement = ""
 ## (optional)	specify memory of master and compute nodes
 ## memory_in_mb_master = 8192
 ## memory_in_mb_compute = 4096
+
+#######################################################################
+## for development, do not use
+########################################################################
 ## (optional) specify if to resolve hostnames with intranet ip addresses
 ## use_intranet = true
+## (optional) create baremetal masters if ture, otherwise create vm masters
+## master_use_baremetal = false
+## (optional) baremetal preset configuration
+## fixed_config_preset = "S1270_32GB_1X1TBSATA_NORAID"
