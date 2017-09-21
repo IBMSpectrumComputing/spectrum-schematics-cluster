@@ -83,7 +83,7 @@ resource "ibm_compute_vm_instance" "dehosts" {
   count             = "${var.number_of_dehost}"
   user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symde\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${ibm_compute_vm_instance.masters.0.hostname}\", \"masteripaddress\":\"${var.use_intranet ? ibm_compute_vm_instance.masters.0.ipv4_address_private : ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
-  private_network_only        = false
+  private_network_only        = true
 }
 ##############################################################################
 # Variables
