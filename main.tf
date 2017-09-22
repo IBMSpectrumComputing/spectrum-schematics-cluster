@@ -33,7 +33,7 @@ resource "ibm_compute_bare_metal" "masters" {
   hourly_billing    = "${var.hourly_billing_master}"
   network_speed     = "${var.network_speed_master}"
   count             = "${var.master_use_bare_metal ? 1 : 0}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
+  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 }
@@ -50,7 +50,7 @@ resource "ibm_compute_vm_instance" "masters" {
   cores             = "${var.core_of_master}"
   memory            = "${var.memory_in_mb_master}"
   count             = "${var.master_use_bare_metal ? 0 : 1}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
+  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 }
@@ -83,7 +83,7 @@ resource "ibm_compute_vm_instance" "computes" {
   count             = "${var.number_of_compute}"
   user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${ibm_compute_vm_instance.masters.0.hostname}\", \"masteripaddress\":\"${var.use_intranet ? ibm_compute_vm_instance.masters.0.ipv4_address_private : ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
-  private_network_only        = false
+  private_network_only        = true
 }
 
 resource "ibm_compute_vm_instance" "dehosts" {

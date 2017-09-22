@@ -232,8 +232,8 @@ function configure_symphony()
 			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}"
 			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/named.xml
 			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/wsg.xml
-			## disable compute role on head if there is compute nodes, to implement decision
-			if [ 1 -lt 2 ]
+			## disable compute role on head if there is compute nodes
+			if [ ${numbercomputes} -gt 0 ]
 			then
 				sed -ibak "s/\(^${MASTERHOST} .*\)(linux)\(.*\)/\1(linux mg)\2/" /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.${clustername}
 			fi
@@ -306,6 +306,8 @@ function funcConnectConfService()
 }
 
 ## Main ##
+
+declare -i numbercomputes
 # configure OS
 os_config
 # write /tmp/user_metadata.py
