@@ -65,7 +65,7 @@ resource "ibm_compute_bare_metal" "computes" {
   hourly_billing    = "${var.hourly_billing_compute}"
   network_speed     = "${var.network_speed_compute}"
   count             = "${var.number_of_compute_bare_metal}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.master_use_bare_metal ? ibm_compute_bare_metal.masters.0.hostname : ibm_compute_vm_instance.masters.0.hostname}\", \"masterprivateipaddress\":\"${var.master_use_bare_metal ? ibm_compute_bare_metal.masters.0.ipv4_address_private : ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${var.master_use_bare_metal ? ibm_compute_bare_metal.masters.0.ipv4_address : ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
+  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.prefix_master}0\", \"masterprivateipaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 }
@@ -81,7 +81,7 @@ resource "ibm_compute_vm_instance" "computes" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.number_of_compute}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.master_use_bare_metal ? ibm_compute_bare_metal.masters.0.hostname : ibm_compute_vm_instance.masters.0.hostname}\", \"masterprivateipaddress\":\"${var.master_use_bare_metal ? ibm_compute_bare_metal.masters.0.ipv4_address_private : ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${var.master_use_bare_metal ? ibm_compute_bare_metal.masters.0.ipv4_address : ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
+  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.prefix_master}0\", \"masterprivateipaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 }

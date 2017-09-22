@@ -352,13 +352,6 @@ else
 	echo "no action"
 fi
 
-# create and/or start up upd server/client to update /etc/hosts and other messages
-if [ "$role" == "symhead" ]
-then
-	create_udp_server
-fi
-create_udp_client
-
 # get local intranet IP address and local hostname
 if [ -z "$masterprivateipaddress" ]
 then
@@ -380,6 +373,13 @@ then
 	localipaddress=$(funcGetPublicIp)
 fi
 localhostname=$(hostname -s)
+
+# create and/or start up upd server/client to update /etc/hosts and other messages
+if [ "$role" == "symhead" ]
+then
+	create_udp_server
+fi
+create_udp_client
 
 #normalize variables
 export PRODUCT=$product
