@@ -66,7 +66,7 @@ function funcGetPublicMask()
 function funcStartConfService()
 {
 	mkdir -p /export
-	if [ "$useintranet" == "yes" ]
+	if [ "$useintranet" == "true" ]
 	then
 		network=`ipcalc -n $localipaddress $localnetmask | sed -e 's/.*=//'`
 		echo -e "/export\t\t${network}/${localnetmask}(rw,no_root_squash)" > /etc/exports
@@ -77,7 +77,7 @@ function funcStartConfService()
 function funcConnectConfService()
 {
 	mkdir -p /export
-	if [ "$useintranet" == 'yes' ]
+	if [ "$useintranet" == 'true' ]
 	then
 		while ! mount | grep export | grep -v grep
 		do
@@ -188,7 +188,7 @@ function download_packages()
 				cd /export/symphony/${VERSION} && wget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin
 				touch /export/download_finished
 			else
-				if [ "$useintranet" == 'no' ]
+				if [ "$useintranet" == 'false' ]
 				then
 					if [ "${ROLE}" == "symcompute" ]
 					then
@@ -344,10 +344,10 @@ then
 fi
 if [ "$useintranet" == "0" ]
 then
-	useintranet=no
+	useintranet=false
 elif [ "$useintranet" == "1" ]
 then
-	useintranet=yes
+	useintranet=true
 else
 	echo "no action"
 fi
@@ -365,9 +365,9 @@ localnetmask=$(funcGetPrivateMask)
 # if localipaddress is not in the same subnet as masterprivateipaddress, force using internet
 if [ "${localipaddress%.*}" != "${masterprivateipaddress%.*}" ]
 then
-	useintranet=no
+	useintranet=false
 fi
-if [ "$useintranet" == "no" ]
+if [ "$useintranet" == "false" ]
 then
 	masteripaddress=${masterpublicipaddress}
 	localipaddress=$(funcGetPublicIp)
