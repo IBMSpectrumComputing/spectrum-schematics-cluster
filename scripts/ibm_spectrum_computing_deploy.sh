@@ -154,7 +154,9 @@ function update_profile_d()
 		elif [ "${ROLE}" == "symde" ]
 		then
 			echo "[ -f /opt/ibm/spectrumcomputing/symphonyde/de72/profile.platform ] && source /opt/ibm/spectrumcomputing/symphonyde/de72/profile.platform" > /etc/profile.d/symphony.sh
+			echo "[ -f /opt/ibm/spectrumcomputing/symphonyde/de72/profile.client ] && source /opt/ibm/spectrumcomputing/symphonyde/de72/profile.client" >> /etc/profile.d/symphony.sh
 			echo "[ -f /opt/ibm/spectrumcomputing/symphonyde/de72/cshrc.platform ] && source /opt/ibm/spectrumcomputing/symphonyde/de72/cshrc.platform" > /etc/profile.d/symphony.csh
+			echo "[ -f /opt/ibm/spectrumcomputing/symphonyde/de72/cshrc.client ] && source /opt/ibm/spectrumcomputing/symphonyde/de72/cshrc.client" >> /etc/profile.d/symphony.csh
 		else
 			echo "nothing to update"
 		fi
@@ -489,13 +491,37 @@ then
 	cat << ENDF > /tmp/post.sh
 if [ "${ROLE}" == "symde" ]
 then
-	echo "post for DE host"
-else
+	echo -e "`date`\tpost configuration for DE host" >> ${LOG_FILE}
+	echo -e "`date`\t...logon to soam client" >> ${LOG_FILE}
+	while [ 1 -lt 2 ]
+	do
+		if soamlogon -u Admin -x Admin 2>/dev/null | grep -qi success
+		then
+			break
+		else
+			sleep 60
+		fi
+	done
+	echo -e "`date`\t...loged on to soam client" >> ${LOG_FILE}
+elif [ "${ROLE}" == 'symhead' ]
+then
 	if [ ! -f /etc/checkfailover ]
 	then
 		. ${SOURCE_PROFILE}
 		egosh user logon -u Admin -x Admin
+		while [ 1 -lt 2 ]
+		do
+			if su - egoadmin -c "egosh user logon -u Admin -x Admin" >/dev/null 2>&1
+			then
+				echo -e "`date`\t...logon to ego" >> ${LOG_FILE}
+				break
+			else
+				sleep 60
+			fi
+		done
 	fi
+else
+	echo "nothing to do"
 fi
 ENDF
 
