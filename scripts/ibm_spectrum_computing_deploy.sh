@@ -82,7 +82,7 @@ function funcConnectConfService()
 		while ! mount | grep export | grep -v grep
 		do
 			LOG "\tmounting /export ..."
-			mount -o tcp,wsize=32768,wsize=32768 ${masteripaddress}:/export /export
+			mount -o tcp,vers=3,rsize=32768,wsize=32768 ${masteripaddress}:/export /export
 			sleep 60
 		done
 		LOG "\tmounted /export ..."
