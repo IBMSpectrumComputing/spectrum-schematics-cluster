@@ -69,7 +69,7 @@ function funcStartConfService()
 	if [ "$useintranet" == "true" ]
 	then
 		network=`ipcalc -n $localipaddress $localnetmask | sed -e 's/.*=//'`
-		echo -e "/export\t\t${network}/${localnetmask}(rw,no_root_squash)" > /etc/exports
+		echo -e "/export\t\t${network}/${localnetmask}(ro,no_root_squash)" > /etc/exports
 		systemctl start nfs
 	fi
 }
@@ -82,7 +82,7 @@ function funcConnectConfService()
 		while ! mount | grep export | grep -v grep
 		do
 			LOG "\tmounting /export ..."
-			mount ${masteripaddress}:/export /export
+			mount -o tcp,wsize=32768,wsize=32768 ${masteripaddress}:/export /export
 			sleep 60
 		done
 		LOG "\tmounted /export ..."
