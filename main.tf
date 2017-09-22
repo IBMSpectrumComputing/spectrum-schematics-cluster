@@ -65,7 +65,7 @@ resource "ibm_compute_vm_instance" "slaves" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.number_of_compute}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${ibm_compute_vm_instance.masters.0.hostname}\", \"masteripaddress\":\"${var.use_intranet ? ibm_compute_vm_instance.masters.0.ipv4_address_private : ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
+  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${ibm_compute_vm_instance.masters.0.hostname}\", \"masteripaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = true
 }
@@ -81,7 +81,7 @@ resource "ibm_compute_vm_instance" "dehosts" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.number_of_dehost}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symde\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${ibm_compute_vm_instance.masters.0.hostname}\", \"masteripaddress\":\"${var.use_intranet ? ibm_compute_vm_instance.masters.0.ipv4_address_private : ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
+  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symde\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${ibm_compute_vm_instance.masters.0.hostname}\", \"masteripaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = true
 }
@@ -98,7 +98,7 @@ variable ibm_sl_api_key {
   description = "Your Softlayer API Key."
 }
 variable datacenter {
-  default = "dal12"
+  default = "dal06"
   description = "The datacenter to create resources in."
 }
 variable seporator {
