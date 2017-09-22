@@ -360,10 +360,23 @@ fi
 create_udp_client
 
 # get local intranet IP address and local hostname
+if [ -z "$masterprivateipaddress" ]
+then
+	## on master node
+	masterprivateipaddress=$(funcGetPrivateIp)
+	masterpublicipaddress=$(funcGetPublicIp)
+fi
+masteripaddress=${masterprivateipaddress}
 localipaddress=$(funcGetPrivateIp)
 localnetmask=$(funcGetPrivateMask)
+# if localipaddress is not in the same subnet as masterprivateipaddress, force using internet
+if [ "${localipaddress%.*}" != "${masterprivateipaddress%.*}" ]
+then
+	useintranet=no
+fi
 if [ "$useintranet" == "no" ]
 then
+	masteripaddress=${masterpublicipaddress}
 	localipaddress=$(funcGetPublicIp)
 fi
 localhostname=$(hostname -s)
