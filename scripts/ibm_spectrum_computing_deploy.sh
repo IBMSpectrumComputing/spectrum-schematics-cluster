@@ -147,8 +147,17 @@ function update_profile_d()
 {
 	if [ -d /etc/profile.d ]
 	then
-		echo "[ -f /opt/ibm/spectrumcomputing/profile.platform ] && source /opt/ibm/spectrumcomputing/profile.platform" > /etc/profile.d/symphony.sh
-		echo "[ -f /opt/ibm/spectrumcomputing/cshrc.platform ] && source /opt/ibm/spectrumcomputing/cshrc.platform" > /etc/profile.d/symphony.csh
+		if [ "${ROLE}" == "symhead" -o "${ROLE}" == 'symcompute' ]
+		then
+			echo "[ -f /opt/ibm/spectrumcomputing/profile.platform ] && source /opt/ibm/spectrumcomputing/profile.platform" > /etc/profile.d/symphony.sh
+			echo "[ -f /opt/ibm/spectrumcomputing/cshrc.platform ] && source /opt/ibm/spectrumcomputing/cshrc.platform" > /etc/profile.d/symphony.csh
+		elif [ "${ROLE}" == "symde" ]
+		then
+			echo "[ -f /opt/ibm/spectrumcomputing/symphonyde/de72/profile.platform ] && source /opt/ibm/spectrumcomputing/symphonyde/de72/profile.platform" > /etc/profile.d/symphony.sh
+			echo "[ -f /opt/ibm/spectrumcomputing/symphonyde/de72/cshrc.platform ] && source /opt/ibm/spectrumcomputing/symphonyde/de72/cshrc.platform" > /etc/profile.d/symphony.csh
+		else
+			echo "nothing to update"
+		fi
 	fi
 }
 
@@ -300,6 +309,8 @@ function configure_symphony()
 		elif [ "$ROLE" == "symde" ]
 		then
 			LOG "configure symphony de node ..."
+			sed -i "s/^EGO_MASTER_LIST=.*/EGO_MASTER_LIST=${MASTERHOST}/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
+			sed -i "s/^EGO_KD_PORT=.*/EGO_KD_PORT=7870/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
 			echo "to implement"
 		else
 			echo nothing to do
@@ -485,6 +496,7 @@ else
 		. ${SOURCE_PROFILE}
 		egosh user logon -u Admin -x Admin
 	fi
+fi
 ENDF
 
 # install LSF
