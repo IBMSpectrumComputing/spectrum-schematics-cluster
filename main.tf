@@ -224,11 +224,11 @@ variable post_install_script_uri {
 # Outputs
 ##############################################################################
 output "symphony_cluster_master_ip" {
-  value = "${ibm_compute_vm_instance.masters.0.ipv4_address}"
+  value = "${ibm_compute_vm_instance.masters.0.ipv4_address_private}"
 }
 output "symphony_cluster_dehost_ip" {
-  value = "${ibm_compute_vm_instance.dehosts.0.ipv4_address}"
+  value = "${ibm_compute_vm_instance.dehosts.0.ipv4_address_private}"
 }
 output "symphony_cluster_web_interface" {
-  value = "https://${ibm_compute_vm_instance.masters.0.ipv4_address}:8443/platform"
+  value = "https://${ibm_compute_vm_instance.masters.0.ipv4_address_private}:8443/platform"
 }
