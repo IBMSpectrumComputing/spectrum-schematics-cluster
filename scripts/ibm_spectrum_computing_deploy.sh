@@ -25,6 +25,14 @@ function os_config()
 	fi
 }
 
+function update_profile_d()
+{
+	if [ -d /etc/profile.d ]
+	then
+		echo "[ -f /opt/ibm/spectrumcomputing/profile.platform ] && source /opt/ibm/spectrumcomputing/profile.platform" > /etc/profile.d/symphony.sh
+		echo "[ -f /opt/ibm/spectrumcomputing/cshrc.platform ] && source /opt/ibm/spectrumcomputing/cshrc.platform" > /etc/profile.d/symphony.csh
+	fi
+}
 function app_depend()
 {
 	LOG "handle symphony dependancy ..."
@@ -224,6 +232,11 @@ function configure_symphony()
 			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}"
 			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/named.xml
 			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/wsg.xml
+			## disable compute role on head if there is compute nodes, to implement decision
+			if [ 1 -lt 2 ]
+			then
+				sed -ibak "s/\(^${MASTERHOST} .*\)(linux)\(.*\)/\1(linux mg)\2/" /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.${clustername}
+			fi
 		elif [ "$ROLE" == "symcompute" ]
 		then
 			LOG "configure symphony compute node ..."
@@ -239,7 +252,7 @@ function configure_symphony()
 	fi
 	if [ "${ROLE}" == "symhead" -o "${ROLE}" == "symcompute" ]
 	then
-		LOG "start symphony cluster ..."
+		LOG "prepare to start symphony cluster ..."
 		LOG "\tegosetrc.sh; egosetsudoers.sh"
 		. ${SOURCE_PROFILE}
 		egosetrc.sh
@@ -389,6 +402,7 @@ if [ "$PRODUCT" == "SYMPHONY" -o "$PRODUCT" == "symphony" ]
 then
 	install_symphony >> $LOG_FILE 2>&1
 	configure_symphony >> $LOG_FILE 2>&1
+	update_profile_d
 	start_symphony >> $LOG_FILE 2>&1
 	SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
 	sleep 200
@@ -401,7 +415,7 @@ then
 		fi
 		if ! ps ax | egrep "opt.ibm.*lim" | grep -v grep > /dev/null
 		then
-			service ego start
+			start_symphony
 			sleep 222
 			continue
 		else
