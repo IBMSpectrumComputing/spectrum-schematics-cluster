@@ -491,18 +491,18 @@ then
 	cat << ENDF > /tmp/post.sh
 if [ "${ROLE}" == "symde" ]
 then
-	echo -e "`date`\tpost configuration for DE host" >> ${LOG_FILE}
-	echo -e "`date`\t...logon to soam client" >> ${LOG_FILE}
+	echo -e "\tpost configuration for DE host" >> ${LOG_FILE}
+	echo -e "\t...logon to soam client" >> ${LOG_FILE}
 	while [ 1 -lt 2 ]
 	do
-		if soamlogon -u Admin -x Admin 2>/dev/null | grep -qi success
+		if su - egoadmin -c "soamlogon -u Admin -x Admin" >/dev/null 2>&1
 		then
 			break
 		else
 			sleep 60
 		fi
 	done
-	echo -e "`date`\t...loged on to soam client" >> ${LOG_FILE}
+	echo -e "\t...logged on to soam client" >> ${LOG_FILE}
 elif [ "${ROLE}" == 'symhead' ]
 then
 	if [ ! -f /etc/checkfailover ]
@@ -513,12 +513,12 @@ then
 		do
 			if su - egoadmin -c "egosh user logon -u Admin -x Admin" >/dev/null 2>&1
 			then
-				echo -e "`date`\t...logon to ego" >> ${LOG_FILE}
 				break
 			else
 				sleep 60
 			fi
 		done
+		echo -e "\t...logged on to ego" >> ${LOG_FILE}
 	fi
 else
 	echo "nothing to do"
