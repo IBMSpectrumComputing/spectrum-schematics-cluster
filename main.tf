@@ -32,8 +32,8 @@ resource "ibm_compute_bare_metal" "masters" {
   datacenter        = "${var.datacenter}"
   hourly_billing    = "${var.hourly_billing_master}"
   network_speed     = "${var.network_speed_master}"
-  count             = "${var.master_use_bare_metal ? 1 : 0}"
-  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"true\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
+  count             = "${var.master_use_bare_metal ? 0 : 0}"
+  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\", \"functionsfile\":\"${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.functions_filename)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 }
@@ -49,8 +49,8 @@ resource "ibm_compute_vm_instance" "masters" {
   network_speed     = "${var.network_speed_master}"
   cores             = "${var.core_of_master}"
   memory            = "${var.memory_in_mb_master}"
-  count             = "${var.master_use_bare_metal ? 0 : 1}"
-  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
+  count             = "${var.master_use_bare_metal ? 1 : 1}"
+  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\", \"functionsfile\":\"${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.functions_filename)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 }
@@ -243,6 +243,10 @@ variable hourly_billing_compute {
 variable post_install_script_uri {
   default = "https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/scripts/ibm_spectrum_computing_deploy.sh"
   description = "uri to the deployment script"
+}
+variable functions_filename {
+  default = "functions.sh"
+  description = "file name to source in the main shell script"
 }
 
 ##############################################################################
