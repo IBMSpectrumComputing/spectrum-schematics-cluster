@@ -313,7 +313,7 @@ function configure_symphony()
 			LOG "configure symphony de node ..."
 			sed -i "s/^EGO_MASTER_LIST=.*/EGO_MASTER_LIST=${MASTERHOST}/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
 			sed -i "s/^EGO_KD_PORT=.*/EGO_KD_PORT=7870/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
-			echo "to implement"
+			LOG "\tconfigured symphony de node ..."
 		else
 			echo nothing to do
 		fi
@@ -510,8 +510,10 @@ then
 		fi
 	done
 	echo -e "\t...logged on to soam client" >> ${LOG_FILE}
+	echo -e "\twait 2 minutes for the muster to create consumer" >> ${LOG_FILE}
+	wait 120
 	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; make ; cd Output; gzip SampleServiceCPP; soamdeploy add SampleServiceCPP -p SampleServiceCPP.gz -c \"/SampleAppCPP\""
-	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; sed -ibak 's/<SSM resReq/<SSM resourceGroupName=\"ManagementHosts\" resReq/' SampleApp.xml; sed -ibak 's/preStartApplication=/resourceGroupName=\"ComputeHosts\" preStartApplication=/' SampleApp.xml; soamreg SampleApp.xml" 
+	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; sed -ibak 's/<SSM resReq/<SSM resourceGroupName=\"ManagementHosts\" resReq/' SampleApp.xml; sed -ibak 's/preStartApplication=/resourceGroupName=\"ComputeHosts\" preStartApplication=/' SampleApp.xml; soamreg SampleApp.xml"
 	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp/Output; ./SyncClient >> $LOG_FILE 2>&1; ./AsyncClient >> $LOG_FILE 2>&1"
 
 elif [ "${ROLE}" == 'symhead' ]
