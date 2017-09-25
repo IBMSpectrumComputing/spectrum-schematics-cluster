@@ -22,7 +22,7 @@ resource "ibm_compute_ssh_key" "ssh_compute_key" {
   public_key = "${var.ssh_public_key}"
 }
 
-# Create baremetal servers with the SSH key.
+# Create bare metal servers with the SSH key.
 resource "ibm_compute_bare_metal" "masters" {
   hostname          = "${var.prefix_master}${count.index}"
   domain            = "${var.domain_name}"
@@ -32,11 +32,12 @@ resource "ibm_compute_bare_metal" "masters" {
   datacenter        = "${var.datacenter}"
   hourly_billing    = "${var.hourly_billing_master}"
   network_speed     = "${var.network_speed_master}"
-  count             = "${var.master_use_baremetal ? 1 : 0}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
+  count             = "${var.master_use_bare_metal ? 1 : 0}"
+  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"true\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = true
 }
+
 # Create virtual servers with the SSH key.
 resource "ibm_compute_vm_instance" "masters" {
   hostname          = "${var.prefix_master}${count.index}"
@@ -48,13 +49,28 @@ resource "ibm_compute_vm_instance" "masters" {
   network_speed     = "${var.network_speed_master}"
   cores             = "${var.core_of_master}"
   memory            = "${var.memory_in_mb_master}"
-  count             = "${var.master_use_baremetal ? 0 : 1}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
+  count             = "${var.master_use_bare_metal ? 0 : 1}"
+  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = true
 }
 
-resource "ibm_compute_vm_instance" "slaves" {
+resource "ibm_compute_bare_metal" "computes" {
+  hostname          = "${var.prefix_compute_bare_metal}${count.index}"
+  domain            = "${var.domain_name}"
+  ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
+  os_reference_code = "${var.os_reference}"
+  fixed_config_preset = "${var.fixed_config_preset}"
+  datacenter        = "${var.datacenter}"
+  hourly_billing    = "${var.hourly_billing_compute}"
+  network_speed     = "${var.network_speed_compute}"
+  count             = "${var.number_of_compute_bare_metal}"
+  user_metadata = "{\"useintranet\": \"true\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.prefix_master}0\", \"masterprivateipaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
+  post_install_script_uri     = "${var.post_install_script_uri}"
+  private_network_only        = false
+}
+
+resource "ibm_compute_vm_instance" "computes" {
   hostname          = "${var.prefix_compute}${count.index}"
   domain            = "${var.domain_name}"
   ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
@@ -65,7 +81,7 @@ resource "ibm_compute_vm_instance" "slaves" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.number_of_compute}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${ibm_compute_vm_instance.masters.0.hostname}\", \"masteripaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\"}"
+  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.prefix_master}0\", \"masterprivateipaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = true
 }
@@ -81,10 +97,11 @@ resource "ibm_compute_vm_instance" "dehosts" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.number_of_dehost}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symde\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${ibm_compute_vm_instance.masters.0.hostname}\", \"masteripaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\"}"
+  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symde\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.prefix_master}0\", \"masterprivateipaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = true
 }
+
 ##############################################################################
 # Variables
 ##############################################################################
@@ -155,6 +172,10 @@ variable prefix_compute {
   default = "compute"
   description = "specify hostname prefix for compute nodes"
 }
+variable prefix_compute_bare_metal {
+  default = "bmcompute"
+  description = "specify hostname prefix for bare metal compute nodes"
+}
 variable prefix_dehost {
   default = "dehost"
   description = "specify hostname prefix for development nodes"
@@ -162,6 +183,10 @@ variable prefix_dehost {
 variable number_of_compute {
   default = 2
   description = "specify number of compute nodes to create"
+}
+variable number_of_compute_bare_metal {
+  default = 0
+  description = "specify number of bare metal compute nodes to create"
 }
 variable number_of_dehost {
   default = 1
@@ -195,9 +220,9 @@ variable os_reference {
   default = "CENTOS_LATEST"
   description = "specify which OS to use for your cluster"
 }
-variable master_use_baremetal {
+variable master_use_bare_metal {
   default = "false"
-  description = "create baremetal masters if ture, otherwise create vm masters"
+  description = "create bare metal masters if ture, otherwise create vm masters"
 }
 variable fixed_config_preset {
   default = "S1270_32GB_1X1TBSATA_NORAID"

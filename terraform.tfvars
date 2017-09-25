@@ -76,3 +76,7 @@ entitlement = ""
 ## master_use_baremetal = false
 ## (optional) baremetal preset configuration
 ## fixed_config_preset = "S1270_32GB_1X1TBSATA_NORAID"
+## (optional)	specify number of bare metal compute nodes to create
+## number_of_compute_bare_metal = 0
+## (optional) specify hostname prefix for bare metal compute nodes
+## prefix_compute_bare_metal = "bmcompute"
