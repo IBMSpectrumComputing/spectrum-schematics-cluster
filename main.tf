@@ -35,7 +35,7 @@ resource "ibm_compute_bare_metal" "masters" {
   count             = "${var.master_use_bare_metal ? 1 : 0}"
   user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"true\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
-  private_network_only        = false
+  private_network_only        = true
 }
 
 # Create virtual servers with the SSH key.
@@ -52,7 +52,7 @@ resource "ibm_compute_vm_instance" "masters" {
   count             = "${var.master_use_bare_metal ? 0 : 1}"
   user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
-  private_network_only        = false
+  private_network_only        = true
 }
 
 resource "ibm_compute_bare_metal" "computes" {
@@ -83,7 +83,7 @@ resource "ibm_compute_vm_instance" "computes" {
   count             = "${var.number_of_compute}"
   user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.prefix_master}0\", \"masterprivateipaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
-  private_network_only        = false
+  private_network_only        = true
 }
 
 resource "ibm_compute_vm_instance" "dehosts" {
@@ -99,7 +99,7 @@ resource "ibm_compute_vm_instance" "dehosts" {
   count             = "${var.number_of_dehost}"
   user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symde\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.prefix_master}0\", \"masterprivateipaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${ibm_compute_vm_instance.masters.0.ipv4_address}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
-  private_network_only        = false
+  private_network_only        = true
 }
 
 ##############################################################################
@@ -115,7 +115,7 @@ variable ibm_sl_api_key {
   description = "Your Softlayer API Key."
 }
 variable datacenter {
-  default = "dal12"
+  default = "dal06"
   description = "The datacenter to create resources in."
 }
 variable seporator {
@@ -249,11 +249,11 @@ variable post_install_script_uri {
 # Outputs
 ##############################################################################
 output "symphony_cluster_master_ip" {
-  value = "${ibm_compute_vm_instance.masters.0.ipv4_address}"
+  value = "${ibm_compute_vm_instance.masters.0.ipv4_address_private}"
 }
 output "symphony_cluster_dehost_ip" {
-  value = "${ibm_compute_vm_instance.dehosts.0.ipv4_address}"
+  value = "${ibm_compute_vm_instance.dehosts.0.ipv4_address_private}"
 }
 output "symphony_cluster_web_interface" {
-  value = "https://${ibm_compute_vm_instance.masters.0.ipv4_address}:8443/platform"
+  value = "https://${ibm_compute_vm_instance.masters.0.ipv4_address_private}:8443/platform"
 }
