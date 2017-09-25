@@ -50,11 +50,17 @@ get_user_metadata
 eval `python /tmp/user_metadata.py`
 
 # download functions file
-LOG "\tdonwloading function file and source it"
+LOG "donwloading function file and source it"
 if [ -n "${functionsfile}" ]
 then
-	wget -o /tmp/function.sh ${functionsfile}
-	. /tmp/functions.sh
+	wget --no-check-certificate -o /dev/null -O /tmp/function.sh ${functionsfile}
+	if [ -f "/tmp/functions.sh" ]
+	then
+		LOG "\tfound /tmp/functions.sh"
+		. /tmp/functions.sh
+	else
+		LOG "\tcan not find /tmp/functions.sh, investigate it please ..."
+	fi
 fi
 
 # handle environment
