@@ -480,11 +480,18 @@ then
 			sleep 120
 			continue
 		else
-			sleep 60
+			sleep 20
+			. ${SOURCE_PROFILE}
+			ROUND=$((ROUND+1))
+			## prepare demo examples
+			LOG "prepare demo examples ..."
+			LOG "\tlogging in ..."
+			egosh user logon -u Admin -x Admin
+			LOG "\tlogged in ..."
+			LOG "create /SampleAppCPP consumer ..."
+			egosh consumer add "/SampleAppCPP" -a Admin -u Guest -e egoadmin -g "ManagementHosts,ComputeHosts" >> $LOG_FILE 2>&1
+			break
 		fi
-		. ${SOURCE_PROFILE}
-		egosh user logon -u Admin -x Admin
-		ROUND=$((ROUND+1))
 	done
 	echo "$PRODUCT $VERSION $ROLE ready `date`" >> /root/application-ready
 	LOG "symphony cluster is now ready ..."
@@ -503,6 +510,10 @@ then
 		fi
 	done
 	echo -e "\t...logged on to soam client" >> ${LOG_FILE}
+	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; make ; cd Output; gzip SampleServiceCPP; soamdeploy add SampleServiceCPP -p SampleServiceCPP.gz -c \"/SampleAppCPP\""
+	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; sed -ibak 's/<SSM resReq/<SSM resourceGroupName=\"ManagementHosts\" resReq/' SampleApp.xml; sed -ibak 's/preStartApplication=/resourceGroupName=\"ComputeHosts\" preStartApplication=/' SampleApp.xml; soamreg SampleApp.xml" 
+	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp/Output; ./SyncClient >> $LOG_FILE 2>&1; ./AsyncClient >> $LOG_FILE 2>&1"
+
 elif [ "${ROLE}" == 'symhead' ]
 then
 	if [ ! -f /etc/checkfailover ]
