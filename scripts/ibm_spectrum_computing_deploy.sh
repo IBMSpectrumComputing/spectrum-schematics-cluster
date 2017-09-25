@@ -53,7 +53,7 @@ eval `python /tmp/user_metadata.py`
 LOG "donwloading function file and source it"
 if [ -n "${functionsfile}" ]
 then
-	wget --no-check-certificate -o /dev/null -O /tmp/function.sh ${functionsfile}
+	wget --no-check-certificate -o /dev/null -O /tmp/functions.sh ${functionsfile}
 	if [ -f "/tmp/functions.sh" ]
 	then
 		LOG "\tfound /tmp/functions.sh"
