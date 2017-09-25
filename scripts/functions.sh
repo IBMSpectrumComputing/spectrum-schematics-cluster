@@ -295,4 +295,52 @@ function configure_symphony()
 		sleep 2
 	fi
 }
+
+function funcGeneratePost()
+{
+cat << ENDF > /tmp/post.sh
+if [ "${ROLE}" == "symde" ]
+then
+	echo -e "\tpost configuration for DE host" >> ${LOG_FILE}
+	echo -e "\t...logon to soam client" >> ${LOG_FILE}
+	while [ 1 -lt 2 ]
+	do
+		if su - egoadmin -c "soamlogon -u Admin -x Admin" >/dev/null 2>&1
+		then
+			break
+		else
+			sleep 60
+		fi
+	done
+	echo -e "\t...logged on to soam client" >> ${LOG_FILE}
+	echo -e "\twait 2 minutes for the muster to create consumer" >> ${LOG_FILE}
+	wait 120
+	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; make ; cd Output; gzip SampleServiceCPP; soamdeploy add SampleServiceCPP -p SampleServiceCPP.gz -c \"/SampleAppCPP\""
+	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; sed -ibak 's/<SSM resReq/<SSM resourceGroupName=\"ManagementHosts\" resReq/' SampleApp.xml; sed -ibak 's/preStartApplication=/resourceGroupName=\"ComputeHosts\" preStartApplication=/' SampleApp.xml; soamreg SampleApp.xml" >> $LOG_FILE 2>&1
+	echo -e "\tSampleAppCPP registered..." >> ${LOG_FILE}
+	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp/Output; ./SyncClient ; sleep 5; ./AsyncClient" >> $LOG_FILE 2>&1
+
+elif [ "${ROLE}" == 'symhead' ]
+then
+	if [ ! -f /etc/checkfailover ]
+	then
+		. ${SOURCE_PROFILE}
+		egosh user logon -u Admin -x Admin
+		while [ 1 -lt 2 ]
+		do
+			if su - egoadmin -c "egosh user logon -u Admin -x Admin" >/dev/null 2>&1
+			then
+				break
+			else
+				sleep 60
+			fi
+		done
+		echo -e "\t...logged on to ego" >> ${LOG_FILE}
+	fi
+else
+	echo "nothing to do"
+fi
+ENDF
+chmod +x /tmp/post.sh
+}
 ##################END FUNCTIONS RELATED######################
