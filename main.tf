@@ -50,7 +50,7 @@ resource "ibm_compute_vm_instance" "masters" {
   cores             = "${var.core_of_master}"
   memory            = "${var.memory_in_mb_master}"
   count             = "${var.master_use_bare_metal ? 1 : 1}"
-  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\", \"functionsfile\":\"${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.functions_filename)}\", \"functionsfile\":\"${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.functions_filename)}\"}"
+  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\", \"functionsfile\":\"${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.functions_filename)}\"}"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 }

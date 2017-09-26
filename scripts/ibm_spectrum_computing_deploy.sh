@@ -138,6 +138,8 @@ else
 	if [ "${role}" != "symde" ]
 	then
 		funcConnectConfService
+	else
+		mkdir -p /export
 	fi
 fi
 
