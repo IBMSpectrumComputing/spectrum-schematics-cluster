@@ -266,7 +266,7 @@ then
 		then
 			break
 		else
-			echo "\t... waiting for cluster" >> ${LOG_FILE}
+			echo -e "\t... waiting for cluster" >> ${LOG_FILE}
 			sleep 60
 		fi
 	done
