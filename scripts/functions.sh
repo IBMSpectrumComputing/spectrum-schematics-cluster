@@ -19,55 +19,12 @@ function add_admin_user()
 	fi
 }
 
-function funcGetPrivateIp()
-{
-	## for distributions using ifconfig and eth0
-	ifconfig eth0 | grep "inet " | awk '{print $2}' | sed -e 's/addr://'
-}
-
-function funcGetPublicIp()
-{
-	## for distributions using ifconfig and eth0
-	ifconfig eth1 | grep "inet " | awk '{print $2}' | sed -e 's/addr://'
-}
-
-function funcGetPrivateMask()
-{
-	## for distributions using ifconfig and eth0
-	ifconfig eth0 | grep "inet " | awk '{print $4}' | sed -e 's/Mask://'
-}
-
 function funcGetPublicMask()
 {
 	## for distributions using ifconfig and eth0
 	ifconfig eth1 | grep "inet " | awk '{print $4}' | sed -e 's/Mask://'
 }
 
-function funcStartConfService()
-{
-	mkdir -p /export
-	if [ "$useintranet" == "true" ]
-	then
-		network=`ipcalc -n $localipaddress $localnetmask | sed -e 's/.*=//'`
-		echo -e "/export\t\t${network}/${localnetmask}(ro,no_root_squash)" > /etc/exports
-		systemctl start nfs
-	fi
-}
-
-function funcConnectConfService()
-{
-	mkdir -p /export
-	if [ "$useintranet" == 'true' ]
-	then
-		while ! mount | grep export | grep -v grep
-		do
-			LOG "\tmounting /export ..."
-			mount -o tcp,vers=3,rsize=32768,wsize=32768 ${masteripaddress}:/export /export
-			sleep 60
-		done
-		LOG "\tmounted /export ..."
-	fi
-}
 ####################FUNCTION PYTHON SCRIPTS##################
 function create_udp_server()
 {

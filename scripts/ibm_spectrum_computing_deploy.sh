@@ -36,6 +36,49 @@ for key in user_metadata.keys():
 ENDF
 }
 
+function funcGetPrivateIp()
+{
+	## for distributions using ifconfig and eth0
+	ifconfig eth0 | grep "inet " | awk '{print $2}' | sed -e 's/addr://'
+}
+
+function funcGetPrivateMask()
+{
+	## for distributions using ifconfig and eth0
+	ifconfig eth0 | grep "inet " | awk '{print $4}' | sed -e 's/Mask://'
+}
+
+function funcGetPublicIp()
+{
+	## for distributions using ifconfig and eth0
+	ifconfig eth1 | grep "inet " | awk '{print $2}' | sed -e 's/addr://'
+}
+
+function funcStartConfService()
+{
+	mkdir -p /export
+	if [ "$useintranet" == "true" ]
+	then
+		network=`ipcalc -n $localipaddress $localnetmask | sed -e 's/.*=//'`
+		echo -e "/export\t\t${network}/${localnetmask}(ro,no_root_squash)" > /etc/exports
+		systemctl start nfs
+	fi
+}
+
+function funcConnectConfService()
+{
+	mkdir -p /export
+	if [ "$useintranet" == 'true' ]
+	then
+		while ! mount | grep export | grep -v grep
+		do
+			LOG "\tmounting /export ..."
+			mount -o tcp,vers=3,rsize=32768,wsize=32768 ${masteripaddress}:/export /export
+			sleep 60
+		done
+		LOG "\tmounted /export ..."
+	fi
+}
 ##################END FUNCTIONS RELATED######################
 
 ######################MAIN PROCEDURE##########################
@@ -49,18 +92,65 @@ get_user_metadata
 # source user_metadata as shell environment
 eval `python /tmp/user_metadata.py`
 
-# download functions file
+# get local hostname, ipaddress and netmask
+localhostname=$(hostname -s)
+localipaddress=$(funcGetPrivateIp)
+localnetmask=$(funcGetPrivateMask)
+if [ -z "$masterprivateipaddress" ]
+then
+	## on master node
+	masterprivateipaddress=$(funcGetPrivateIp)
+	masterpublicipaddress=$(funcGetPublicIp)
+fi
+masteripaddress=${masterprivateipaddress}
+
+# check metadata to see if we need use internet interface
+if [ "$useintranet" == "0" ]
+then
+	useintranet=false
+elif [ "$useintranet" == "1" ]
+then
+	useintranet=true
+else
+	echo "no action"
+fi
+## if localipaddress is not in the same subnet as masterprivateipaddress, force using internet
+if [ "${localipaddress%.*}" != "${masterprivateipaddress%.*}" ]
+then
+	useintranet=false
+fi
+if [ "$useintranet" == "false" ]
+then
+	masteripaddress=${masterpublicipaddress}
+	localipaddress=$(funcGetPublicIp)
+fi
+
+# start nfs service on primary master and try to mount nfs service from compute nodes
+if [ -z "$masterhostnames" ]
+then
+	if echo ${localhostname} | egrep -qi "0$"
+	then
+		funcStartConfService
+	else
+		funcConnectConfService
+	fi
+else
+	if [ "${role}" != "symde" ]
+	then
+		funcConnectConfService
+	fi
+fi
+
+# download functions file if not ther already
 LOG "donwloading function file and source it"
 if [ -n "${functionsfile}" ]
 then
-	wget --no-check-certificate -o /dev/null -O /tmp/functions.sh ${functionsfile}
-	if [ -f "/tmp/functions.sh" ]
+	if [ ! -f /export/functions.sh ]
 	then
-		LOG "\tfound /tmp/functions.sh"
-		. /tmp/functions.sh
-	else
-		LOG "\tcan not find /tmp/functions.sh, investigate it please ..."
+		wget --no-check-certificate -o /dev/null -O /export/functions.sh ${functionsfile}
 	fi
+	LOG "\tfound /export/functions.sh"
+	. /export/functions.sh
 fi
 
 # handle environment
@@ -77,37 +167,6 @@ then
 		role=symcompute
 	fi
 fi
-if [ "$useintranet" == "0" ]
-then
-	useintranet=false
-elif [ "$useintranet" == "1" ]
-then
-	useintranet=true
-else
-	echo "no action"
-fi
-
-# get local intranet IP address and local hostname
-if [ -z "$masterprivateipaddress" ]
-then
-	## on master node
-	masterprivateipaddress=$(funcGetPrivateIp)
-	masterpublicipaddress=$(funcGetPublicIp)
-fi
-masteripaddress=${masterprivateipaddress}
-localipaddress=$(funcGetPrivateIp)
-localnetmask=$(funcGetPrivateMask)
-# if localipaddress is not in the same subnet as masterprivateipaddress, force using internet
-if [ "${localipaddress%.*}" != "${masterprivateipaddress%.*}" ]
-then
-	useintranet=false
-fi
-if [ "$useintranet" == "false" ]
-then
-	masteripaddress=${masterpublicipaddress}
-	localipaddress=$(funcGetPublicIp)
-fi
-localhostname=$(hostname -s)
 
 # create and/or start up upd server/client to update /etc/hosts and other messages
 if [ "$role" == "symhead" ]
@@ -126,7 +185,6 @@ export SIMPLIFIEDWEM=N
 export ENTITLEMENT_FILE=/tmp/entitlement
 if [ -z "$masterhostnames" ]
 then
-	funcStartConfService
 	masterhostnames=${localhostname}
 	echo -e "127.0.0.1\tlocalhost.localdomain\tlocalhost\n${localipaddress}\t${localhostname}.${domain}\t${localhostname}" > /etc/hosts
 	export MASTERHOSTNAMES=$masterhostnames
@@ -134,10 +192,6 @@ then
 else
 	export MASTERHOSTNAMES=$masterhostnames
 	export MASTERHOST=`echo $MASTERHOSTNAMES | awk '{print $1}'`
-	if [ "${ROLE}" != "symde" ]
-	then
-		funcConnectConfService
-	fi
 	python /tmp/udpclient.py "update ${localipaddress} ${localhostname}.${domain} ${localhostname}"
 	echo -e "127.0.0.1\tlocalhost.localdomain\tlocalhost\n${masteripaddress}\t${MASTERHOST}.${domain}\t${MASTERHOST}\n${localipaddress}\t${localhostname}.${domain}\t${localhostname}" > /etc/hosts
 	ping -c2 -w2 ${MASTERHOST}
