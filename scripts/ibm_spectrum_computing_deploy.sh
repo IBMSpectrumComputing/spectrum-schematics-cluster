@@ -79,6 +79,38 @@ function funcConnectConfService()
 		LOG "\tmounted /export ..."
 	fi
 }
+
+function funcDetermineConnection()
+{
+	if [ -z "$masterprivateipaddress" ]
+	then
+		## on master node
+		masterprivateipaddress=$(funcGetPrivateIp)
+		masterpublicipaddress=$(funcGetPublicIp)
+	fi
+	masteripaddress=${masterprivateipaddress}
+	
+	# check metadata to see if we need use internet interface
+	if [ "$useintranet" == "0" ]
+	then
+		useintranet=false
+	elif [ "$useintranet" == "1" ]
+	then
+		useintranet=true
+	else
+		echo "no action"
+	fi
+	## if localipaddress is not in the same subnet as masterprivateipaddress, force using internet
+	if [ "${localipaddress%.*}" != "${masterprivateipaddress%.*}" ]
+	then
+		useintranet=false
+	fi
+	if [ "$useintranet" == "false" ]
+	then
+		masteripaddress=${masterpublicipaddress}
+		localipaddress=$(funcGetPublicIp)
+	fi
+}
 ##################END FUNCTIONS RELATED######################
 
 ######################MAIN PROCEDURE##########################
@@ -96,34 +128,9 @@ eval `python /tmp/user_metadata.py`
 localhostname=$(hostname -s)
 localipaddress=$(funcGetPrivateIp)
 localnetmask=$(funcGetPrivateMask)
-if [ -z "$masterprivateipaddress" ]
-then
-	## on master node
-	masterprivateipaddress=$(funcGetPrivateIp)
-	masterpublicipaddress=$(funcGetPublicIp)
-fi
-masteripaddress=${masterprivateipaddress}
 
-# check metadata to see if we need use internet interface
-if [ "$useintranet" == "0" ]
-then
-	useintranet=false
-elif [ "$useintranet" == "1" ]
-then
-	useintranet=true
-else
-	echo "no action"
-fi
-## if localipaddress is not in the same subnet as masterprivateipaddress, force using internet
-if [ "${localipaddress%.*}" != "${masterprivateipaddress%.*}" ]
-then
-	useintranet=false
-fi
-if [ "$useintranet" == "false" ]
-then
-	masteripaddress=${masterpublicipaddress}
-	localipaddress=$(funcGetPublicIp)
-fi
+# determine to use intranet or internet interface
+funcDetermineConnection
 
 # start nfs service on primary master and try to mount nfs service from compute nodes
 if [ -z "$masterhostnames" ]
@@ -143,7 +150,7 @@ else
 	fi
 fi
 
-# download functions file if not ther already
+# download functions file if not there already
 LOG "donwloading function file and source it"
 if [ -n "${functionsfile}" ]
 then
@@ -222,6 +229,7 @@ app_depend
 # download packages to /export
 download_packages
 
+# generate entitlement file or wait for download
 if [ "${ROLE}" == "symhead" -o "${ROLE}" == "lsfmaster" ]
 then
 	generate_entitlement
@@ -234,7 +242,6 @@ else
 	done
 	LOG "\tpackages downloaded ..."
 fi
-# generate entitlement file
 
 # install symphony
 SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
@@ -268,6 +275,7 @@ then
 			LOG "\tlogged in ..."
 			LOG "create /SampleAppCPP consumer ..."
 			egosh consumer add "/SampleAppCPP" -a Admin -u Guest -e egoadmin -g "ManagementHosts,ComputeHosts" >> $LOG_FILE 2>&1
+			LOG "\tconsumer /SampleAppCPP created"
 			break
 		fi
 	done
@@ -284,7 +292,6 @@ else
 	echo "unsupported product $PRODUCT `date`" >> /root/application-failed
 fi
 
-[ -x /tmp/post.sh ] || chmod +x /tmp/post.sh
 [ -x /tmp/post.sh ] && /tmp/post.sh >> /tmp/output
 
 echo "$0 execution ends at `date`" >> /tmp/output
