@@ -142,21 +142,6 @@ then
 	. /export/functions.sh
 fi
 
-# handle environment
-[ -z "$product" ] && product=SYMPHONY
-[ -z "$version" ] && version=latest
-[ -z "$domain" ] && domain=domain.com
-[ -z "$clustername" ] && clustername=symcluster
-if [ -z "$role" ]
-then
-	if hostname | grep -qi master
-	then
-		role=symhead
-	else
-		role=symcompute
-	fi
-fi
-
 # create and/or start up upd server/client to update /etc/hosts and other messages
 if [ "$role" == "symhead" ]
 then
@@ -276,8 +261,8 @@ fi
 
 echo "$0 execution ends at `date`" >> /tmp/output
 ## keep the script running in case symphony stop when shell terminates
-while [ 1 -lt 2 ]
-do
-	sleep 3600
-done
+#while [ 1 -lt 2 ]
+#do
+#	sleep 3600
+#done
 ###################END OF MAIN PROCEDURE##################
