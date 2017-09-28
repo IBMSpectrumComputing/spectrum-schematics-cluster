@@ -131,15 +131,15 @@ else
 fi
 
 # download functions file if not there already
-LOG "donwloading function file and source it"
+LOG "donwloading product function file and source it"
 if [ -n "${functionsfile}" ]
 then
-	if [ ! -f /export/functions.sh ]
+	if [ ! -f /export/${product}.sh ]
 	then
-		wget --no-check-certificate -o /dev/null -O /export/functions.sh ${functionsfile}
+		wget --no-check-certificate -o /dev/null -O /export/${product}.sh ${functionsfile}
 	fi
-	LOG "\tfound /export/functions.sh"
-	. /export/functions.sh
+	LOG "\tfound /export/${product}.sh"
+	. /export/${product}.sh
 fi
 
 # create and/or start up upd server/client to update /etc/hosts and other messages
