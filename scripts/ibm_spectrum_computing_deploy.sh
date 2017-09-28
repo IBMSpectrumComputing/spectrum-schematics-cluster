@@ -1,7 +1,7 @@
 #!/bin/bash
 
 declare -i numbercomputes
-LOG_FILE=/root/${product}_deploy_log
+LOG_FILE=/root/deploy_log_${product}
 
 ###################COMMON SHELL FUNCTIONS#################
 function LOG ()
@@ -23,7 +23,7 @@ function funcSetupProxyService()
 	fi
 }
 
-function funcUseProxySerivce()
+function funcUseProxyService()
 {
 	if [ "${useintranet}" != "false" -a "${role}" != "symhead" -a "${role}" != "lsfmaster" -a "${role}" != "symde" ]
 	then
@@ -35,7 +35,7 @@ function funcUseProxySerivce()
 		echo export ftp_proxy=http://${masterprivateipaddress}:3128 >> /root/.bash_profile
 		if [ -f /etc/redhat-release ]
 		then
-			echo "proxy=http://ma1osc2m1.platformlab.ibm.com:3128" >> /etc/yum.conf
+			echo "proxy=http://${masterprivateipaddress}:3128" >> /etc/yum.conf
 		elif [ -f /etc/lsb-release ]
 		then
 			echo "Acquire::http::Proxy \"http://${masterprivateipaddress}:3128/\";" > /etc/apt/apt.conf
