@@ -25,7 +25,7 @@ function funcSetupProxyService()
 
 function funcUseProxySerivce()
 {
-	if [ "${useintranet}" != "true" -a "${role}" != "symhead" -a "${role}" != "lsfmaster" -a "${role}" != "symde" ]
+	if [ "${useintranet}" != "false" -a "${role}" != "symhead" -a "${role}" != "lsfmaster" -a "${role}" != "symde" ]
 	then
 		export http_proxy=http://${masterprivateipaddress}:3128
 		export https_proxy=http://${masterprivateipaddress}:3128
