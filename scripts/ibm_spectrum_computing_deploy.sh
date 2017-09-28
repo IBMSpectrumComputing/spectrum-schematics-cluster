@@ -1,10 +1,7 @@
 #!/bin/bash
 
-declare -i ROUND=0
 declare -i numbercomputes
-DEBUG=1
-LOG_FILE=/root/sym_deploy_log
-
+LOG_FILE=/root/${product}_deploy_log
 
 ###################COMMON SHELL FUNCTIONS#################
 function LOG ()
@@ -12,9 +9,47 @@ function LOG ()
 	echo -e `date` "$1" >> "$LOG_FILE"
 }
 
+function funcSetupProxyService()
+{
+	if [ "${role}" == "symhead" -o "${role}" == "lsfmaster" ]
+	then
+		if [ -f /etc/redhat-release ]
+		then
+			LOG "\tyum -y install ed tree lsof psmisc nfs-utils net-tools"
+			yum -y install squid
+			systemctl enable squid
+			systemctl start squid
+		fi
+	fi
+}
+
+function funcUseProxySerivce()
+{
+	if [ "${useintranet}" != "true" -a "${role}" != "symhead" -a "${role}" != "lsfmaster" -a "${role}" != "symde" ]
+	then
+		export http_proxy=http://${masterprivateipaddress}:3128
+		export https_proxy=http://${masterprivateipaddress}:3128
+		export ftp_proxy=http://${masterprivateipaddress}:3128
+		echo export http_proxy=http://${masterprivateipaddress}:3128 >> /root/.bash_profile
+		echo export https_proxy=http://${masterprivateipaddress}:3128 >> /root/.bash_profile
+		echo export ftp_proxy=http://${masterprivateipaddress}:3128 >> /root/.bash_profile
+		if [ -f /etc/redhat-release ]
+		then
+			echo "proxy=http://ma1osc2m1.platformlab.ibm.com:3128" >> /etc/yum.conf
+		elif [ -f /etc/lsb-release ]
+		then
+			echo "Acquire::http::Proxy \"http://${masterprivateipaddress}:3128/\";" > /etc/apt/apt.conf
+		else
+			echo noconfig
+		fi
+	fi
+}
+
 function os_config()
 {
 	LOG "configuring os ..."
+	funcSetupProxyService
+	funcUseProxyService
 	if [ -f /etc/redhat-release ]
 	then
 		LOG "\tyum -y install ed tree lsof psmisc nfs-utils net-tools"
@@ -22,22 +57,17 @@ function os_config()
 	fi
 }
 
-function funcGetPrivateIp()
+function funcGetIp()
 {
 	## for distributions using ifconfig and eth0
-	ifconfig eth0 | grep "inet " | awk '{print $2}' | sed -e 's/addr://'
+	#ifconfig eth0 | grep "inet " | awk '{print $2}' | sed -e 's/addr://'
+	ip address show dev ${1} | grep "inet " | awk '{print $2}' | sed -e 's/addr://' -e 's/\/.*//'
 }
 
-function funcGetPrivateMask()
+function funcGetMask()
 {
 	## for distributions using ifconfig and eth0
-	ifconfig eth0 | grep "inet " | awk '{print $4}' | sed -e 's/Mask://'
-}
-
-function funcGetPublicIp()
-{
-	## for distributions using ifconfig and eth0
-	ifconfig eth1 | grep "inet " | awk '{print $2}' | sed -e 's/addr://'
+	ip address show dev ${1} | grep "inet " | awk '{print $4}' | sed -e 's/Mask://'
 }
 
 function funcStartConfService()
@@ -71,8 +101,8 @@ function funcDetermineConnection()
 	if [ -z "$masterprivateipaddress" ]
 	then
 		## on master node
-		masterprivateipaddress=$(funcGetPrivateIp)
-		masterpublicipaddress=$(funcGetPublicIp)
+		masterprivateipaddress=$(funcGetIp eth0)
+		masterpublicipaddress=$(funcGetIp eth1)
 	fi
 	masteripaddress=${masterprivateipaddress}
 	
@@ -94,7 +124,7 @@ function funcDetermineConnection()
 	if [ "$useintranet" == "false" ]
 	then
 		masteripaddress=${masterpublicipaddress}
-		localipaddress=$(funcGetPublicIp)
+		localipaddress=$(funcGetIp eth1)
 	fi
 }
 ##################END FUNCTIONS RELATED######################
@@ -106,8 +136,8 @@ os_config
 
 # get local hostname, ipaddress and netmask
 localhostname=$(hostname -s)
-localipaddress=$(funcGetPrivateIp)
-localnetmask=$(funcGetPrivateMask)
+localipaddress=$(funcGetIp eth0)
+localnetmask=$(funcMask eth0)
 
 # determine to use intranet or internet interface
 funcDetermineConnection
@@ -218,6 +248,7 @@ then
 	start_symphony >> $LOG_FILE 2>&1
 	sleep 120 
 	## watch 2 more rounds to make sure symhony service is running
+	declare -i ROUND=0
 	while [ $ROUND -lt 2 ]
 	do
 		if [ "$ROLE" == "symde" ]
