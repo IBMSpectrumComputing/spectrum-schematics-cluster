@@ -2,12 +2,6 @@
 
 ###################COMMON SHELL FUNCTIONS#################
 
-function help()
-{
-	echo "Usage: $0"
-	exit
-}
-
 function add_admin_user()
 {
 	user_id=`id $1 2>>/dev/null`
@@ -17,12 +11,6 @@ function add_admin_user()
 	else
 		LOG "User $1 exists already."
 	fi
-}
-
-function funcGetPublicMask()
-{
-	## for distributions using ifconfig and eth0
-	ifconfig eth1 | grep "inet " | awk '{print $4}' | sed -e 's/Mask://'
 }
 
 ####################FUNCTION PYTHON SCRIPTS##################
@@ -45,7 +33,7 @@ while True:
 				f.write("%s\t%s\t%s\n" % (record[0],record[1],record[2]))
 		s.sendto("done", addr)
 	elif re.match(r'^queryproxy', data, re.I):
-		output = subprocess.check_output("ps ax | grep -i squid | grep -v grep; exit 0",shell=True)
+		output = subprocess.check_output("ps ax | egrep -i "bin.squid" | grep -v grep; exit 0",shell=True)
 		if re.match(r'.*squid',output):
 			s.sendto("proxyready", addr)
 		else:
