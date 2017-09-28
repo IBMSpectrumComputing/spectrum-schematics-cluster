@@ -79,7 +79,7 @@ resource "ibm_compute_vm_instance" "computes" {
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.number_of_compute}"
   user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symcompute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
-  private_network_only        = false
+  private_network_only        = "${var.use_intranet ? true : false}"
 }
 
 resource "ibm_compute_vm_instance" "dehosts" {

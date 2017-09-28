@@ -292,9 +292,4 @@ fi
 [ -x /tmp/post.sh ] && /tmp/post.sh >> /tmp/output
 
 echo "$0 execution ends at `date`" >> /tmp/output
-## keep the script running in case symphony stop when shell terminates
-#while [ 1 -lt 2 ]
-#do
-#	sleep 3600
-#done
 ###################END OF MAIN PROCEDURE##################
