@@ -22,20 +22,6 @@ function os_config()
 	fi
 }
 
-
-function get_user_metadata()
-{
-	cat << ENDF > /tmp/user_metadata.py
-import subprocess
-import json
-output = subprocess.check_output("curl https://api.service.softlayer.com/rest/v3/SoftLayer_Resource_Metadata/UserMetadata.txt 2>/dev/null; echo test > /dev/null",shell=True)
-user_metadata = json.loads(output)
-print("export METADATA=\"METADATA\"")
-for key in user_metadata.keys():
-	print("%s=\"%s\"" % (key,user_metadata[key]))
-ENDF
-}
-
 function funcGetPrivateIp()
 {
 	## for distributions using ifconfig and eth0
@@ -117,12 +103,6 @@ function funcDetermineConnection()
 
 # configure OS, install basic utilities like wget curl mount .etc
 os_config
-
-# write /tmp/user_metadata.py script to get user_metadata
-get_user_metadata
-
-# source user_metadata as shell environment
-eval `python /tmp/user_metadata.py`
 
 # get local hostname, ipaddress and netmask
 localhostname=$(hostname -s)
