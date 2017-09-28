@@ -64,10 +64,10 @@ function funcGetIp()
 	ip address show dev ${1} | grep "inet " | awk '{print $2}' | sed -e 's/addr://' -e 's/\/.*//'
 }
 
-function funcGetMask()
+function funcGetIPCIDR()
 {
 	## for distributions using ifconfig and eth0
-	ip address show dev ${1} | grep "inet " | awk '{print $4}' | sed -e 's/Mask://'
+	ip address show dev ${1} | grep "inet " | awk '{print $2}'
 }
 
 function funcStartConfService()
@@ -75,7 +75,6 @@ function funcStartConfService()
 	mkdir -p /export
 	if [ "$useintranet" == "true" ]
 	then
-		network=`ipcalc -n $localipaddress $localnetmask | sed -e 's/.*=//'`
 		echo -e "/export\t\t${network}/${localnetmask}(ro,no_root_squash)" > /etc/exports
 		systemctl start nfs
 	fi
@@ -137,7 +136,9 @@ os_config
 # get local hostname, ipaddress and netmask
 localhostname=$(hostname -s)
 localipaddress=$(funcGetIp eth0)
-localnetmask=$(funcMask eth0)
+localipcidr=$(funcGetIPCIDR eth0)
+localnetmask=$(ipcalc -m $localipcidr | sed -e 's/.*=//')
+network=$(ipcalc -n $localipcidr | sed -e 's/.*=//')
 
 # determine to use intranet or internet interface
 funcDetermineConnection
