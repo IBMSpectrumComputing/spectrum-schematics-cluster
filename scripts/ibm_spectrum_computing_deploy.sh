@@ -2,6 +2,8 @@
 
 declare -i numbercomputes
 LOG_FILE=/root/deploy_log_${product}
+##run only if cloud config is not there##
+[ -d /var/lib/cloud ] && exit
 
 ###################COMMON SHELL FUNCTIONS#################
 function LOG ()
@@ -19,6 +21,15 @@ function funcSetupProxyService()
 			yum -y install squid
 			systemctl enable squid
 			systemctl start squid
+		elif [ -f /etc/lsb-release ]
+		then
+			apt-get update
+			export DEBIAN_FRONTEND=noninteractive
+			apt-get install -y squid
+			systemctl enable squid
+			systemctl start squid
+		else
+			echo "not proxy setup"
 		fi
 	fi
 }
