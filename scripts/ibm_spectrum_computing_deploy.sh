@@ -1,10 +1,7 @@
 #!/bin/bash
 
-declare -i ROUND=0
 declare -i numbercomputes
-DEBUG=1
-LOG_FILE=/root/sym_deploy_log
-
+LOG_FILE=/root/deploy_log_${product}
 
 ###################COMMON SHELL FUNCTIONS#################
 function LOG ()
@@ -12,9 +9,57 @@ function LOG ()
 	echo -e `date` "$1" >> "$LOG_FILE"
 }
 
+function funcSetupProxyService()
+{
+	if [ "${role}" == "symhead" -o "${role}" == "lsfmaster" ]
+	then
+		if [ -f /etc/redhat-release ]
+		then
+			LOG "\tyum -y install ed tree lsof psmisc nfs-utils net-tools"
+			yum -y install squid
+			systemctl enable squid
+			systemctl start squid
+		fi
+	fi
+}
+
+function funcUseProxyService()
+{
+	if [ "${useintranet}" != "false" -a "${role}" != "symhead" -a "${role}" != "lsfmaster" -a "${role}" != "symde" ]
+	then
+		export http_proxy=http://${masterprivateipaddress}:3128
+		export https_proxy=http://${masterprivateipaddress}:3128
+		export ftp_proxy=http://${masterprivateipaddress}:3128
+		echo export http_proxy=http://${masterprivateipaddress}:3128 >> /root/.bash_profile
+		echo export https_proxy=http://${masterprivateipaddress}:3128 >> /root/.bash_profile
+		echo export ftp_proxy=http://${masterprivateipaddress}:3128 >> /root/.bash_profile
+		if [ -f /etc/redhat-release ]
+		then
+			echo "proxy=http://${masterprivateipaddress}:3128" >> /etc/yum.conf
+		elif [ -f /etc/lsb-release ]
+		then
+			echo "Acquire::http::Proxy \"http://${masterprivateipaddress}:3128/\";" > /etc/apt/apt.conf
+		else
+			echo noconfig
+		fi
+	fi
+}
+
 function os_config()
 {
 	LOG "configuring os ..."
+	# check metadata to see if we need use internet interface
+	if [ "$useintranet" == "0" ]
+	then
+		useintranet=false
+	elif [ "$useintranet" == "1" ]
+	then
+		useintranet=true
+	else
+		echo "no action"
+	fi
+	funcSetupProxyService
+	funcUseProxyService
 	if [ -f /etc/redhat-release ]
 	then
 		LOG "\tyum -y install ed tree lsof psmisc nfs-utils net-tools"
@@ -22,36 +67,14 @@ function os_config()
 	fi
 }
 
-
-function get_user_metadata()
+function funcGetIp()
 {
-	cat << ENDF > /tmp/user_metadata.py
-import subprocess
-import json
-output = subprocess.check_output("curl https://api.service.softlayer.com/rest/v3/SoftLayer_Resource_Metadata/UserMetadata.txt 2>/dev/null; echo test > /dev/null",shell=True)
-user_metadata = json.loads(output)
-print("export METADATA=\"METADATA\"")
-for key in user_metadata.keys():
-	print("%s=\"%s\"" % (key,user_metadata[key]))
-ENDF
+	ip address show dev ${1} | grep "inet " | awk '{print $2}' | sed -e 's/addr://' -e 's/\/.*//'
 }
 
-function funcGetPrivateIp()
+function funcGetIPCIDR()
 {
-	## for distributions using ifconfig and eth0
-	ifconfig eth0 | grep "inet " | awk '{print $2}' | sed -e 's/addr://'
-}
-
-function funcGetPrivateMask()
-{
-	## for distributions using ifconfig and eth0
-	ifconfig eth0 | grep "inet " | awk '{print $4}' | sed -e 's/Mask://'
-}
-
-function funcGetPublicIp()
-{
-	## for distributions using ifconfig and eth0
-	ifconfig eth1 | grep "inet " | awk '{print $2}' | sed -e 's/addr://'
+	ip address show dev ${1} | grep "inet " | awk '{print $2}'
 }
 
 function funcStartConfService()
@@ -59,8 +82,8 @@ function funcStartConfService()
 	mkdir -p /export
 	if [ "$useintranet" == "true" ]
 	then
-		network=`ipcalc -n $localipaddress $localnetmask | sed -e 's/.*=//'`
 		echo -e "/export\t\t${network}/${localnetmask}(ro,no_root_squash)" > /etc/exports
+		systemctl enable nfs
 		systemctl start nfs
 	fi
 }
@@ -85,21 +108,11 @@ function funcDetermineConnection()
 	if [ -z "$masterprivateipaddress" ]
 	then
 		## on master node
-		masterprivateipaddress=$(funcGetPrivateIp)
-		masterpublicipaddress=$(funcGetPublicIp)
+		masterprivateipaddress=$(funcGetIp eth0)
+		masterpublicipaddress=$(funcGetIp eth1)
 	fi
 	masteripaddress=${masterprivateipaddress}
 	
-	# check metadata to see if we need use internet interface
-	if [ "$useintranet" == "0" ]
-	then
-		useintranet=false
-	elif [ "$useintranet" == "1" ]
-	then
-		useintranet=true
-	else
-		echo "no action"
-	fi
 	## if localipaddress is not in the same subnet as masterprivateipaddress, force using internet
 	if [ "${localipaddress%.*}" != "${masterprivateipaddress%.*}" ]
 	then
@@ -108,7 +121,7 @@ function funcDetermineConnection()
 	if [ "$useintranet" == "false" ]
 	then
 		masteripaddress=${masterpublicipaddress}
-		localipaddress=$(funcGetPublicIp)
+		localipaddress=$(funcGetIp eth1)
 	fi
 }
 ##################END FUNCTIONS RELATED######################
@@ -118,16 +131,12 @@ function funcDetermineConnection()
 # configure OS, install basic utilities like wget curl mount .etc
 os_config
 
-# write /tmp/user_metadata.py script to get user_metadata
-get_user_metadata
-
-# source user_metadata as shell environment
-eval `python /tmp/user_metadata.py`
-
 # get local hostname, ipaddress and netmask
 localhostname=$(hostname -s)
-localipaddress=$(funcGetPrivateIp)
-localnetmask=$(funcGetPrivateMask)
+localipaddress=$(funcGetIp eth0)
+localipcidr=$(funcGetIPCIDR eth0)
+localnetmask=$(ipcalc -m $localipcidr | sed -e 's/.*=//')
+network=$(ipcalc -n $localipcidr | sed -e 's/.*=//')
 
 # determine to use intranet or internet interface
 funcDetermineConnection
@@ -151,30 +160,15 @@ else
 fi
 
 # download functions file if not there already
-LOG "donwloading function file and source it"
+LOG "donwloading product function file and source it"
 if [ -n "${functionsfile}" ]
 then
-	if [ ! -f /export/functions.sh ]
+	if [ ! -f /export/${product}.sh ]
 	then
-		wget --no-check-certificate -o /dev/null -O /export/functions.sh ${functionsfile}
+		wget --no-check-certificate -o /dev/null -O /export/${product}.sh ${functionsfile}
 	fi
-	LOG "\tfound /export/functions.sh"
-	. /export/functions.sh
-fi
-
-# handle environment
-[ -z "$product" ] && product=SYMPHONY
-[ -z "$version" ] && version=latest
-[ -z "$domain" ] && domain=domain.com
-[ -z "$clustername" ] && clustername=symcluster
-if [ -z "$role" ]
-then
-	if hostname | grep -qi master
-	then
-		role=symhead
-	else
-		role=symcompute
-	fi
+	LOG "\tfound /export/${product}.sh"
+	. /export/${product}.sh
 fi
 
 # create and/or start up upd server/client to update /etc/hosts and other messages
@@ -253,6 +247,7 @@ then
 	start_symphony >> $LOG_FILE 2>&1
 	sleep 120 
 	## watch 2 more rounds to make sure symhony service is running
+	declare -i ROUND=0
 	while [ $ROUND -lt 2 ]
 	do
 		if [ "$ROLE" == "symde" ]
@@ -295,9 +290,4 @@ fi
 [ -x /tmp/post.sh ] && /tmp/post.sh >> /tmp/output
 
 echo "$0 execution ends at `date`" >> /tmp/output
-## keep the script running in case symphony stop when shell terminates
-while [ 1 -lt 2 ]
-do
-	sleep 3600
-done
 ###################END OF MAIN PROCEDURE##################

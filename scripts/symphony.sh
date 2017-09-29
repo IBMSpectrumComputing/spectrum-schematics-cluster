@@ -2,12 +2,6 @@
 
 ###################COMMON SHELL FUNCTIONS#################
 
-function help()
-{
-	echo "Usage: $0"
-	exit
-}
-
 function add_admin_user()
 {
 	user_id=`id $1 2>>/dev/null`
@@ -19,12 +13,6 @@ function add_admin_user()
 	fi
 }
 
-function funcGetPublicMask()
-{
-	## for distributions using ifconfig and eth0
-	ifconfig eth1 | grep "inet " | awk '{print $4}' | sed -e 's/Mask://'
-}
-
 ####################FUNCTION PYTHON SCRIPTS##################
 function create_udp_server()
 {
@@ -32,7 +20,7 @@ function create_udp_server()
 #!/usr/bin/env python
 
 ETC_HOSTS = '/etc/hosts'
-import re, socket
+import re, socket, subprocess
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind(('0.0.0.0',9999))
 while True:
@@ -43,7 +31,15 @@ while True:
 		if len(record) == 3 and re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', record[0]):
 			with open(ETC_HOSTS,'a') as f:
 				f.write("%s\t%s\t%s\n" % (record[0],record[1],record[2]))
-	s.sendto("done", addr)
+		s.sendto("done", addr)
+	elif re.match(r'^queryproxy', data, re.I):
+		output = subprocess.check_output("ps ax | egrep -i \"bin.squid\" | grep -v grep; exit 0",shell=True)
+		if re.match(r'.*squid',output):
+			s.sendto("proxyready", addr)
+		else:
+			s.sendto("proxyunavailable", addr)
+	else:
+		s.sendto("done", addr)
 ENDF
 	chmod +x /tmp/udpserver.py
 	nohup python /tmp/udpserver.py >> /tmp/udpserver.log 2>&1 &

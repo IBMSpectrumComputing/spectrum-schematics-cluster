@@ -33,8 +33,7 @@ resource "ibm_compute_bare_metal" "masters" {
   hourly_billing    = "${var.hourly_billing_master}"
   network_speed     = "${var.network_speed_master}"
   count             = "${var.master_use_bare_metal ? 0 : 0}"
-  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\", \"functionsfile\":\"${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.functions_filename)}\"}"
-  post_install_script_uri     = "${var.post_install_script_uri}"
+  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symhead\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = false
 }
 
@@ -50,8 +49,7 @@ resource "ibm_compute_vm_instance" "masters" {
   cores             = "${var.core_of_master}"
   memory            = "${var.memory_in_mb_master}"
   count             = "${var.master_use_bare_metal ? 1 : 1}"
-  user_metadata = "{\"numbercomputes\": \"${var.number_of_compute + var.number_of_compute_bare_metal}\", \"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symhead\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\",\"entitlement\":\"${base64encode(var.entitlement)}\", \"functionsfile\":\"${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.functions_filename)}\"}"
-  post_install_script_uri     = "${var.post_install_script_uri}"
+  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symhead\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = false
 }
 
@@ -65,8 +63,7 @@ resource "ibm_compute_bare_metal" "computes" {
   hourly_billing    = "${var.hourly_billing_compute}"
   network_speed     = "${var.network_speed_compute}"
   count             = "${var.number_of_compute_bare_metal}"
-  user_metadata = "{\"useintranet\": \"true\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.prefix_master}0\", \"masterprivateipaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${ibm_compute_vm_instance.masters.0.ipv4_address}\", \"functionsfile\":\"${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.functions_filename)}\"}"
-  post_install_script_uri     = "${var.post_install_script_uri}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symcompute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = false
 }
 
@@ -81,9 +78,8 @@ resource "ibm_compute_vm_instance" "computes" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.number_of_compute}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symcompute\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.prefix_master}0\", \"masterprivateipaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${ibm_compute_vm_instance.masters.0.ipv4_address}\", \"functionsfile\":\"${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.functions_filename)}\"}"
-  post_install_script_uri     = "${var.post_install_script_uri}"
-  private_network_only        = false
+  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symcompute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_network_only        = "${var.use_intranet ? true : false}"
 }
 
 resource "ibm_compute_vm_instance" "dehosts" {
@@ -97,8 +93,7 @@ resource "ibm_compute_vm_instance" "dehosts" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.number_of_dehost}"
-  user_metadata = "{\"useintranet\": \"${var.use_intranet}\", \"domain\": \"${var.domain_name}\", \"product\": \"${var.product}\", \"version\": \"${var.version}\", \"role\":\"symde\",\"clusteradmin\":\"${var.cluster_admin}\", \"clustername\": \"${var.cluster_name}\", \"masterhostnames\":\"${var.prefix_master}0\", \"masterprivateipaddress\":\"${ibm_compute_vm_instance.masters.0.ipv4_address_private}\", \"masterpublicipaddress\" : \"${ibm_compute_vm_instance.masters.0.ipv4_address}\", \"functionsfile\":\"${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.functions_filename)}\"}"
-  post_install_script_uri     = "${var.post_install_script_uri}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symde\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = false
 }
 
@@ -117,10 +112,6 @@ variable ibm_sl_api_key {
 variable datacenter {
   default = "dal12"
   description = "The datacenter to create resources in."
-}
-variable seporator {
-  default = "\n"
-  description = "join entitlement"
 }
 variable entitlement {
   default = <<EOF
@@ -243,10 +234,6 @@ variable hourly_billing_compute {
 variable post_install_script_uri {
   default = "https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/scripts/ibm_spectrum_computing_deploy.sh"
   description = "uri to the deployment script"
-}
-variable functions_filename {
-  default = "functions.sh"
-  description = "file name to source in the main shell script"
 }
 
 ##############################################################################
