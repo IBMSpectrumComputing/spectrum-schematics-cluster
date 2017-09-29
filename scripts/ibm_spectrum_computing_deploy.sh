@@ -48,6 +48,16 @@ function funcUseProxyService()
 function os_config()
 {
 	LOG "configuring os ..."
+	# check metadata to see if we need use internet interface
+	if [ "$useintranet" == "0" ]
+	then
+		useintranet=false
+	elif [ "$useintranet" == "1" ]
+	then
+		useintranet=true
+	else
+		echo "no action"
+	fi
 	funcSetupProxyService
 	funcUseProxyService
 	if [ -f /etc/redhat-release ]
@@ -59,14 +69,11 @@ function os_config()
 
 function funcGetIp()
 {
-	## for distributions using ifconfig and eth0
-	#ifconfig eth0 | grep "inet " | awk '{print $2}' | sed -e 's/addr://'
 	ip address show dev ${1} | grep "inet " | awk '{print $2}' | sed -e 's/addr://' -e 's/\/.*//'
 }
 
 function funcGetIPCIDR()
 {
-	## for distributions using ifconfig and eth0
 	ip address show dev ${1} | grep "inet " | awk '{print $2}'
 }
 
@@ -76,6 +83,7 @@ function funcStartConfService()
 	if [ "$useintranet" == "true" ]
 	then
 		echo -e "/export\t\t${network}/${localnetmask}(ro,no_root_squash)" > /etc/exports
+		systemctl enable nfs
 		systemctl start nfs
 	fi
 }
@@ -105,16 +113,6 @@ function funcDetermineConnection()
 	fi
 	masteripaddress=${masterprivateipaddress}
 	
-	# check metadata to see if we need use internet interface
-	if [ "$useintranet" == "0" ]
-	then
-		useintranet=false
-	elif [ "$useintranet" == "1" ]
-	then
-		useintranet=true
-	else
-		echo "no action"
-	fi
 	## if localipaddress is not in the same subnet as masterprivateipaddress, force using internet
 	if [ "${localipaddress%.*}" != "${masterprivateipaddress%.*}" ]
 	then
