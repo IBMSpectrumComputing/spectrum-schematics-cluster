@@ -64,17 +64,35 @@ function os_config()
 	then
 		LOG "\tyum -y install ed tree lsof psmisc nfs-utils net-tools"
 		yum -y install ed tree lsof psmisc nfs-utils net-tools
+	elif [ -f /etc/lsb-release ]
+	then
+		LOG "\tapt-get bash install -y wget curl tree ncompress gettext rpm nfs-kernel-server"
+		apt-get update
+		export DEBIAN_FRONTEND=noninteractive
+		if  cat /etc/lsb-release | egrep -qi "ubuntu 16"
+		then
+			apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages  wget curl tree ncompress gettext rpm nfs-kernel-server
+		else
+			apt-get install -y --force-yes  wget curl tree ncompress gettext rpm nfs-kernel-server
+		fi
+	else
+		echo "os_config not handled"
 	fi
 }
 
-function funcGetIp()
+function funcGetPrivateIp()
 {
-	ip address show dev ${1} | grep "inet " | awk '{print $2}' | sed -e 's/addr://' -e 's/\/.*//'
+	ip address show | egrep "inet .*global" | egrep "inet[ ]+10\." | head -1 | awk '{print $2}' | sed -e 's/\/.*//'
+}
+
+function funcGetPublicIp()
+{
+	ip address show | egrep "inet .*global" | egrep -v "inet[ ]+10\." | head -1 | awk '{print $2}' | sed -e 's/\/.*//'
 }
 
 function funcGetIPCIDR()
 {
-	ip address show dev ${1} | grep "inet " | awk '{print $2}'
+	ip address show | egrep "inet .*global" | egrep "inet[ ]+10\." | head -1 | awk '{print $2}'
 }
 
 function funcStartConfService()
@@ -82,7 +100,7 @@ function funcStartConfService()
 	mkdir -p /export
 	if [ "$useintranet" == "true" ]
 	then
-		echo -e "/export\t\t${network}/${localnetmask}(ro,no_root_squash)" > /etc/exports
+		echo -e "/export\t\t${localnetwork}/${localnetmask}(ro,no_root_squash)" > /etc/exports
 		systemctl enable nfs
 		systemctl start nfs
 	fi
@@ -108,8 +126,8 @@ function funcDetermineConnection()
 	if [ -z "$masterprivateipaddress" ]
 	then
 		## on master node
-		masterprivateipaddress=$(funcGetIp eth0)
-		masterpublicipaddress=$(funcGetIp eth1)
+		masterprivateipaddress=$(funcGetPrivateIp)
+		masterpublicipaddress=$(funcGetPublicIp)
 	fi
 	masteripaddress=${masterprivateipaddress}
 	
@@ -121,7 +139,7 @@ function funcDetermineConnection()
 	if [ "$useintranet" == "false" ]
 	then
 		masteripaddress=${masterpublicipaddress}
-		localipaddress=$(funcGetIp eth1)
+		localipaddress=$(funcGetPublicIp)
 	fi
 }
 ##################END FUNCTIONS RELATED######################
@@ -133,10 +151,10 @@ os_config
 
 # get local hostname, ipaddress and netmask
 localhostname=$(hostname -s)
-localipaddress=$(funcGetIp eth0)
-localipcidr=$(funcGetIPCIDR eth0)
+localipaddress=$(funcGetPrivateIp)
+localipcidr=$(funcGetIPCIDR)
 localnetmask=$(ipcalc -m $localipcidr | sed -e 's/.*=//')
-network=$(ipcalc -n $localipcidr | sed -e 's/.*=//')
+localnetwork=$(ipcalc -n $localipcidr | sed -e 's/.*=//')
 
 # determine to use intranet or internet interface
 funcDetermineConnection
