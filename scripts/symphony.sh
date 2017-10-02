@@ -135,7 +135,7 @@ function download_packages()
 			else
 				if [ "$useintranet" == 'false' ]
 				then
-					if [ "${ROLE}" == "symcompute" ]
+					if [ "${ROLE}" == "compute" ]
 					then
 						LOG "\twget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin"
 						cd /export/symphony/${VERSION} && wget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin
@@ -189,7 +189,7 @@ function install_symphony()
 			sh /export/symphony/${VERSION}/symde-7.2.0.0_x86_64.bin --quiet
 		fi
 	else
-		if [ "${ROLE}" == "symcompute" ]
+		if [ "${ROLE}" == "compute" ]
 		then
 			export EGOCOMPUTEHOST=Y
 		fi
@@ -245,7 +245,7 @@ function configure_symphony()
 			then
 				sed -ibak "s/\(^${MASTERHOST} .*\)(linux)\(.*\)/\1(linux mg)\2/" /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.${clustername}
 			fi
-		elif [ "$ROLE" == "symcompute" ]
+		elif [ "$ROLE" == "compute" ]
 		then
 			LOG "configure symphony compute node ..."
 			LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f\""
