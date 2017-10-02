@@ -2,8 +2,10 @@
 
 declare -i numbercomputes
 LOG_FILE=/root/deploy_log_${product}
-##run only if cloud config is not there##
-[ -d /var/lib/cloud ] && exit
+
+##run only once cloud config is not there##
+[ -f /root/user_metadata ] && . /root/user_metadata
+[ -f /tmp/deploy ] && exit || touch /tmp/deploy
 
 ###################COMMON SHELL FUNCTIONS#################
 function LOG ()
