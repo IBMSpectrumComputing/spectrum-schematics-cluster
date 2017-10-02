@@ -8,8 +8,10 @@ ibm_bmx_api_key = ""
 ibm_sl_username = ""
 ibm_sl_api_key = ""
  
-## (optional)the datacenter to create resources in
+## (optional)the datacenter to create vm resources in
 ## datacenter = "tor01"
+## (optional)the datacenter to create bare metal resources in
+## datacenter = "wdc04"
 ## (optional)choose charge method, hourly for true and monthly for false
 ## hourly_billing_master = true
 ## hourly_billing_compute = true

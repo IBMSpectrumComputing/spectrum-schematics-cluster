@@ -29,7 +29,7 @@ resource "ibm_compute_bare_metal" "masters" {
   ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
   os_reference_code = "${var.os_reference}"
   fixed_config_preset = "${var.fixed_config_preset}"
-  datacenter        = "${var.datacenter}"
+  datacenter        = "${var.datacenter_bare_metal}"
   hourly_billing    = "${var.hourly_billing_master}"
   network_speed     = "${var.network_speed_master}"
   count             = "${var.master_use_bare_metal ? 1 : 0}"
@@ -64,7 +64,7 @@ resource "ibm_compute_vm_instance" "masters" {
   domain            = "${var.domain_name}"
   ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
   os_reference_code = "${var.os_reference}"
-  datacenter        = "${var.datacenter}"
+  datacenter        = "${var.datacenter_bare_metal}"
   hourly_billing    = "${var.hourly_billing_master}"
   network_speed     = "${var.network_speed_master}"
   cores             = "${var.core_of_master}"
@@ -153,6 +153,10 @@ variable ibm_sl_api_key {
 variable datacenter {
   default = "dal12"
   description = "The datacenter to create resources in."
+}
+variable datacenter_bare_metal {
+  default = "wdc04"
+  description = "The datacenter to create baremetal resources in."
 }
 variable entitlement {
   default = <<EOF
