@@ -67,7 +67,7 @@ function update_profile_d()
 {
 	if [ -d /etc/profile.d ]
 	then
-		if [ "${ROLE}" == "symhead" -o "${ROLE}" == 'symcompute' ]
+		if [ "${ROLE}" == "master" -o "${ROLE}" == 'compute' ]
 		then
 			echo "[ -f /opt/ibm/spectrumcomputing/profile.platform ] && source /opt/ibm/spectrumcomputing/profile.platform" > /etc/profile.d/symphony.sh
 			echo "[ -f /opt/ibm/spectrumcomputing/cshrc.platform ] && source /opt/ibm/spectrumcomputing/cshrc.platform" > /etc/profile.d/symphony.csh
@@ -86,7 +86,7 @@ function update_profile_d()
 function app_depend()
 {
 	LOG "handle symphony dependancy ..."
-	if [ "${PRODUCT}" == "SYMPHONY" -o "${PRODUCT}" == "symphony" ]
+	if [ "${PRODUCT}" == "symphony" ]
 	then
 		LOG "\tyum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd"
 		yum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd
@@ -103,7 +103,7 @@ function download_packages()
 	if [ "$MASTERHOSTNAMES" == "$MASTERHOST" ]
 	then
 		# we can get the package from anywhere applicable, then export through nfs://export, not implemented here yet
-		if [ "${PRODUCT}" == "SYMPHONY" -o "$PRODUCT" == "symphony" ]
+		if [ "$PRODUCT" == "symphony" ]
 		then
 			LOG "download symphony packages ..."
 			mkdir -p /export/symphony/${VERSION}
@@ -113,7 +113,7 @@ function download_packages()
 			else
 				ver_in_pkg=${VERSION}
 			fi
-			if [ "$ROLE" == 'symhead' -o "${ROLE}" == 'lsfmaster' ]
+			if [ "$ROLE" == 'master' ]
 			then
 				LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin"
 				cd /export/symphony/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin
@@ -151,7 +151,7 @@ function download_packages()
 
 function generate_entitlement()
 {
-	if [ "$PRODUCT" == "SYMPHONY" -o "$PRODUCT" == "symphony" ]
+	if [ "$PRODUCT" == "symphony" ]
 	then
 		if [ -n "$entitlement" ]
 		then
@@ -197,7 +197,7 @@ function install_symphony()
 
 function start_symphony()
 {
-	if [ "${ROLE}" == "symhead" -o "${ROLE}" == "symcompute" ]
+	if [ "${ROLE}" == "master" -o "${ROLE}" == "compute" ]
 	then
 		LOG "\tstart symphony..."
 		if [ -f /etc/redhat-release ]
@@ -219,7 +219,7 @@ function configure_symphony()
 	if [ "$MASTERHOSTNAMES" == "$MASTERHOST" ]
 	then
 		# no failover
-		if [ "${ROLE}" == "symhead" ]
+		if [ "${ROLE}" == "master" ]
 		then
 			LOG "configure symphony master ..."
 			LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}\""
@@ -246,7 +246,7 @@ function configure_symphony()
 			echo nothing to do
 		fi
 	fi
-	if [ "${ROLE}" == "symhead" -o "${ROLE}" == "symcompute" ]
+	if [ "${ROLE}" == "master" -o "${ROLE}" == "compute" ]
 	then
 		LOG "prepare to start symphony cluster ..."
 		LOG "\tegosetrc.sh; egosetsudoers.sh"
@@ -282,7 +282,7 @@ then
 	echo -e "\tSampleAppCPP registered..." >> ${LOG_FILE}
 	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp/Output; ./SyncClient ; sleep 5; ./AsyncClient" >> $LOG_FILE 2>&1
 
-elif [ "${ROLE}" == 'symhead' ]
+elif [ "${ROLE}" == 'master' ]
 then
 	if [ ! -f /etc/checkfailover ]
 	then

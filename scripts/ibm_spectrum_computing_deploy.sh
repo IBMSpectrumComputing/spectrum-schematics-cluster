@@ -15,7 +15,7 @@ function LOG ()
 
 function funcSetupProxyService()
 {
-	if [ "${role}" == "symhead" -o "${role}" == "lsfmaster" ]
+	if [ "${role}" == "master" ]
 	then
 		if [ -f /etc/redhat-release ]
 		then
@@ -38,7 +38,7 @@ function funcSetupProxyService()
 
 function funcUseProxyService()
 {
-	if [ "${useintranet}" != "false" -a "${role}" != "symhead" -a "${role}" != "lsfmaster" -a "${role}" != "symde" ]
+	if [ "${useintranet}" != "false" -a "${role}" != "master" -a "${role}" != "symde" ]
 	then
 		export http_proxy=http://${masterprivateipaddress}:3128
 		export https_proxy=http://${masterprivateipaddress}:3128
@@ -187,11 +187,11 @@ then
 		funcConnectConfService
 	fi
 else
-	if [ "${role}" != "symde" ]
+	if [ "${role}" == "symde" ]
 	then
-		funcConnectConfService
-	else
 		mkdir -p /export
+	else
+		funcConnectConfService
 	fi
 fi
 
@@ -208,7 +208,7 @@ then
 fi
 
 # create and/or start up upd server/client to update /etc/hosts and other messages
-if [ "$role" == "symhead" ]
+if [ "$role" == "master" ]
 then
 	create_udp_server
 fi
@@ -238,10 +238,10 @@ fi
 export DERBY_DB_HOST=$MASTERHOST
 if [ -z "$clusteradmin" ]
 then
-	if [ "$product" == "SYMPHONY" -o "$product" == "symphony" ]
+	if [ "$product" == "symphony" ]
 	then
 		clusteradmin=egoadmin
-	elif [ "$product" == "LSF" -o "$product" == "lsf"  ]
+	elif [ "$product" == "lsf"  ]
 	then
 		clusteradmin=lsfadmin
 	else
@@ -260,7 +260,7 @@ app_depend
 download_packages
 
 # generate entitlement file or wait for download
-if [ "${ROLE}" == "symhead" -o "${ROLE}" == "lsfmaster" ]
+if [ "${ROLE}" == "master" ]
 then
 	generate_entitlement
 else
@@ -274,13 +274,13 @@ else
 fi
 
 #deploy product 
-if [ "$PRODUCT" == "SYMPHONY" -o "$PRODUCT" == "symphony" ]
+if [ "$PRODUCT" == "symphony" ]
 then
 	SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
 	deploy_product
 
 # install LSF
-elif [ "$PRODUCT" == "LSF" -o "$PRODUCT" == "lsf" ]
+elif [ "$PRODUCT" == "lsf" ]
 then
 	echo installing spectrum computing LSF
 else

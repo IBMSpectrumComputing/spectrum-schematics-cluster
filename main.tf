@@ -33,7 +33,7 @@ resource "ibm_compute_bare_metal" "masters" {
   hourly_billing    = "${var.hourly_billing_master}"
   network_speed     = "${var.network_speed_master}"
   count             = "${var.master_use_bare_metal ? 1 : 0}"
-  #user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symhead\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  #user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   #post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 
@@ -43,10 +43,10 @@ resource "ibm_compute_bare_metal" "masters" {
     host = "${self.public_ipv4_address}"
   }
   provisioner "local-exec" {
-    command = "mkdir -p files; echo \"numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symhead\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > files/user_metadata.symhead"
+    command = "mkdir -p files; echo \"numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > files/user_metadata.master"
   }
   provisioner "file" {
-    source = "files/user_metadata.symhead"
+    source = "files/user_metadata.master"
     destination = "/root/user_metadata"
   }
   provisioner "file" {
@@ -70,7 +70,7 @@ resource "ibm_compute_vm_instance" "masters" {
   cores             = "${var.core_of_master}"
   memory            = "${var.memory_in_mb_master}"
   count             = "${var.master_use_bare_metal ? 0 : 1}"
-  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symhead\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = false
 }
 
@@ -84,7 +84,7 @@ resource "ibm_compute_bare_metal" "computes" {
   hourly_billing    = "${var.hourly_billing_compute}"
   network_speed     = "${var.network_speed_compute}"
   count             = "${var.number_of_compute_bare_metal}"
-  #user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symcompute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  #user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   #post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
   connection {
@@ -93,10 +93,10 @@ resource "ibm_compute_bare_metal" "computes" {
     host = "${self.public_ipv4_address}"
   }
   provisioner "local-exec" {
-    command = "mkdir -p files; echo \"useintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symcompute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > files/user_metadata.symcompute"
+    command = "mkdir -p files; echo \"useintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > files/user_metadata.compute"
   }
   provisioner "file" {
-    source = "files/user_metadata.symcompute"
+    source = "files/user_metadata.compute"
     destination = "/root/user_metadata"
   }
   provisioner "file" {
@@ -119,7 +119,7 @@ resource "ibm_compute_vm_instance" "computes" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.number_of_compute}"
-  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symcompute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = "${var.use_intranet ? true : false}"
 }
 
@@ -183,10 +183,6 @@ variable product {
 variable version {
   default = "latest"
   description = "spectrum computing product version"
-}
-variable role {
-  default = "symcompute"
-  description = "node role of the product"
 }
 variable cluster_admin {
   default = "egoadmin"
