@@ -64,7 +64,7 @@ resource "ibm_compute_vm_instance" "masters" {
   domain            = "${var.domain_name}"
   ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
   os_reference_code = "${var.os_reference}"
-  datacenter        = "${var.datacenter_bare_metal}"
+  datacenter        = "${var.datacenter}"
   hourly_billing    = "${var.hourly_billing_master}"
   network_speed     = "${var.network_speed_master}"
   cores             = "${var.core_of_master}"
@@ -80,7 +80,7 @@ resource "ibm_compute_bare_metal" "computes" {
   ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
   os_reference_code = "${var.os_reference}"
   fixed_config_preset = "${var.fixed_config_preset}"
-  datacenter        = "${var.datacenter}"
+  datacenter        = "${var.datacenter_bare_metal}"
   hourly_billing    = "${var.hourly_billing_compute}"
   network_speed     = "${var.network_speed_compute}"
   count             = "${var.number_of_compute_bare_metal}"
