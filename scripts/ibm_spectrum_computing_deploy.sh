@@ -273,47 +273,11 @@ else
 	LOG "\tpackages downloaded ..."
 fi
 
-# install symphony
-SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
+#deploy product 
 if [ "$PRODUCT" == "SYMPHONY" -o "$PRODUCT" == "symphony" ]
 then
-	install_symphony >> $LOG_FILE 2>&1
-	configure_symphony >> $LOG_FILE 2>&1
-	update_profile_d
-	start_symphony >> $LOG_FILE 2>&1
-	sleep 120 
-	## watch 2 more rounds to make sure symhony service is running
-	declare -i ROUND=0
-	while [ $ROUND -lt 2 ]
-	do
-		if [ "$ROLE" == "symde" ]
-		then
-			break
-		fi
-		if ! ps ax | egrep "opt.ibm.*lim" | grep -v grep > /dev/null
-		then
-			start_symphony
-			sleep 120
-			continue
-		else
-			sleep 20
-			. ${SOURCE_PROFILE}
-			ROUND=$((ROUND+1))
-			## prepare demo examples
-			LOG "prepare demo examples ..."
-			LOG "\tlogging in ..."
-			egosh user logon -u Admin -x Admin
-			LOG "\tlogged in ..."
-			LOG "create /SampleAppCPP consumer ..."
-			egosh consumer add "/SampleAppCPP" -a Admin -u Guest -e egoadmin -g "ManagementHosts,ComputeHosts" >> $LOG_FILE 2>&1
-			LOG "\tconsumer /SampleAppCPP created"
-			break
-		fi
-	done
-	echo "$PRODUCT $VERSION $ROLE ready `date`" >> /root/application-ready
-	LOG "symphony cluster is now ready ..."
-	LOG "generating symphony post configuration activity"
-	funcGeneratePost
+	SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
+	deploy_product
 
 # install LSF
 elif [ "$PRODUCT" == "LSF" -o "$PRODUCT" == "lsf" ]
