@@ -253,7 +253,7 @@ variable memory_in_mb_compute {
   description = "specify memory of compute server"
 }
 variable os_reference {
-  default = "CENTOS_LATEST"
+  default = "CENTOS_7_64"
   description = "specify which OS to use for your cluster"
 }
 variable master_use_bare_metal {
