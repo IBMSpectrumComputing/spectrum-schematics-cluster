@@ -32,9 +32,30 @@ resource "ibm_compute_bare_metal" "masters" {
   datacenter        = "${var.datacenter}"
   hourly_billing    = "${var.hourly_billing_master}"
   network_speed     = "${var.network_speed_master}"
-  count             = "${var.master_use_bare_metal ? 0 : 0}"
+  count             = "${var.master_use_bare_metal ? 1 : 0}"
   user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symhead\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  #post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
+
+  connection {
+    user = "root"
+    private_key = "${file(pathexpand("~/.ssh/id_rsa"))}"
+    host = "${self.ipv4_address}"
+  }
+  provisioner "local-exec" {
+    command = "echo \"numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symhead\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > files/tmp.user_metadata"
+  }
+  provisioner "file" {
+    source = "files/tmp.user_metadata"
+    destination = "/root/user_metadata"
+  }
+  provisioner "file" {
+    source = "scripts/ibm_spectrum_computing_deploy.sh"
+    destination = "/root/ibm_spectrum_computing_deploy.sh"
+  }
+  provisioner "remote-exec" {
+    inline = "bash /root/ibm_spectrum_computing_deploy.sh"
+  }
 }
 
 # Create virtual servers with the SSH key.
@@ -48,7 +69,7 @@ resource "ibm_compute_vm_instance" "masters" {
   network_speed     = "${var.network_speed_master}"
   cores             = "${var.core_of_master}"
   memory            = "${var.memory_in_mb_master}"
-  count             = "${var.master_use_bare_metal ? 1 : 1}"
+  count             = "${var.master_use_bare_metal ? 0 : 1}"
   user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symhead\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = false
 }
