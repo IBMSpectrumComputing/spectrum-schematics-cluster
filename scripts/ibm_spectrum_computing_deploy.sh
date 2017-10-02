@@ -28,6 +28,10 @@ function funcSetupProxyService()
 			apt-get update
 			export DEBIAN_FRONTEND=noninteractive
 			apt-get install -y squid
+			sed -i 's/#acl localnet src 10/acl localnet src 10/' /etc/squid/squid.conf
+			sed -i 's/#acl localnet src 172/acl localnet src 10/' /etc/squid/squid.conf
+			sed -i 's/#acl localnet src 192/acl localnet src 10/' /etc/squid/squid.conf
+			sed -i 's/#http_access allow localnet/http_access allow localnet/' /etc/squid/squid.conf
 			systemctl enable squid
 			systemctl start squid
 		else
@@ -79,7 +83,7 @@ function os_config()
 		yum -y install ed tree lsof psmisc nfs-utils net-tools
 	elif [ -f /etc/lsb-release ]
 	then
-		LOG "\tapt-get bash install -y wget curl tree ncompress gettext rpm nfs-kernel-server"
+		LOG "\tapt-get bash install -y wget curl tree ncompress gettext rpm nfs-kernel-server ipcalc"
 		apt-get update
 		export DEBIAN_FRONTEND=noninteractive
 		if  cat /etc/lsb-release | egrep -qi "ubuntu 16"
@@ -108,19 +112,23 @@ function funcGetPublicIp()
 	ip address show | egrep "inet .*global" | egrep -v "inet[ ]+10\." | head -1 | awk '{print $2}' | sed -e 's/\/.*//'
 }
 
-function funcGetIPCIDR()
-{
-	ip address show | egrep "inet .*global" | egrep "inet[ ]+10\." | head -1 | awk '{print $2}'
-}
-
 function funcStartConfService()
 {
 	mkdir -p /export
 	if [ "$useintranet" == "true" ]
 	then
-		echo -e "/export\t\t${localnetwork}/${localnetmask}(ro,no_root_squash)" > /etc/exports
-		systemctl enable nfs
-		systemctl start nfs
+		echo -e "/export\t\t10.0.0.0/8(ro,no_root_squash) 172.16.0.0/12(ro,no_root_squash) 192.168.0.0/16(ro,no_root_squash)" > /etc/exports
+		if [ -f /etc/redhat-release ]
+		then
+			systemctl enable nfs
+			systemctl start nfs
+		elif [ -f /etc/lsb-release ]
+		then
+			systemctl enable nfs-kernel-server
+			systemctl start nfs-kernel-server
+		else
+			echo "not known"
+		fi
 	fi
 }
 
@@ -170,9 +178,6 @@ os_config
 # get local hostname, ipaddress and netmask
 localhostname=$(hostname -s)
 localipaddress=$(funcGetPrivateIp)
-localipcidr=$(funcGetIPCIDR)
-localnetmask=$(ipcalc -m $localipcidr | sed -e 's/.*=//')
-localnetwork=$(ipcalc -n $localipcidr | sed -e 's/.*=//')
 
 # determine to use intranet or internet interface
 funcDetermineConnection
@@ -283,6 +288,7 @@ then
 elif [ "$PRODUCT" == "lsf" ]
 then
 	echo installing spectrum computing LSF
+	deploy_product
 else
 	echo "unsupported product $PRODUCT `date`" >> /root/application-failed
 fi

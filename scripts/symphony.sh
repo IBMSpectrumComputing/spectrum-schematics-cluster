@@ -88,8 +88,22 @@ function app_depend()
 	LOG "handle symphony dependancy ..."
 	if [ "${PRODUCT}" == "symphony" ]
 	then
-		LOG "\tyum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd"
-		yum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd
+		if [ -f /etc/redhat-release ]
+		then
+			LOG "\tyum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd"
+			yum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd
+		elif [ -f /etc/lsb-release ]
+		then
+			LOG "\tapt-get install -y gcc g++ openjdk-8-jdk"
+			if  cat /etc/lsb-release | egrep -qi "ubuntu 16"
+			then
+				apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages gcc g++ openjdk-8-jdk
+			else
+				apt-get install -y --force-yes gcc g++ openjdk-7-jdk
+			fi
+		else
+			echo "unknown"
+		fi
 	elif [ "${PRODUCT}" == "LSF" -o "${PRODUCT}" == "lsf" ]
 	then
 		LOG "...handle lsf dependancy"
