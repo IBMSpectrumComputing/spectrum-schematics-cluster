@@ -91,6 +91,11 @@ function os_config()
 	else
 		echo "os_config not handled"
 	fi
+	if [ -h /bin/sh -a -f /bin/bash ]
+	then
+		rm -f /bin/sh
+		cp /bin/bash /bin/sh
+	fi
 }
 
 function funcGetPrivateIp()

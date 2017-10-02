@@ -200,7 +200,15 @@ function start_symphony()
 	if [ "${ROLE}" == "symhead" -o "${ROLE}" == "symcompute" ]
 	then
 		LOG "\tstart symphony..."
-		service ego start
+		if [ -f /etc/redhat-release ]
+		then
+			service ego start
+		elif [ -f /etc/lsb-release ]
+		then
+			/etc/rc3.d/S95ego start
+		else
+			echo "no start"
+		fi
 	fi
 }
 
