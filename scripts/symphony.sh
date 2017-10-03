@@ -255,6 +255,7 @@ function configure_symphony()
 			LOG "configure symphony de node ..."
 			sed -i "s/^EGO_MASTER_LIST=.*/EGO_MASTER_LIST=${MASTERHOST}/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
 			sed -i "s/^EGO_KD_PORT=.*/EGO_KD_PORT=7870/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
+			sed -i 's/$version = "3"/$version = "3" -o $version = "4"/' /opt/ibm/spectrumcomputing/symphonyde/de72/conf/profile.symclient
 			LOG "\tconfigured symphony de node ..."
 		else
 			echo nothing to do
