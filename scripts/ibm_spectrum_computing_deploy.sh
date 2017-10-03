@@ -1,7 +1,7 @@
 #!/bin/bash
 
 declare -i numbercomputes
-LOG_FILE=/root/deploy_log_${product}
+LOG_FILE=/root/log_deploy__${product}
 
 ##run only once cloud config is not there##
 [ -f /root/user_metadata ] && . /root/user_metadata
