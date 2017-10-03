@@ -39,7 +39,7 @@ resource "ibm_compute_bare_metal" "masters" {
 
   connection {
     user = "root"
-    private_key = "${file(pathexpand("~/.ssh/id_rsa"))}"
+    private_key = "${var.ssh_private_key}"
     host = "${self.public_ipv4_address}"
   }
   provisioner "local-exec" {
@@ -164,6 +164,9 @@ ego_base   3.6   dd/mm/yyyy   ()   ()   ()   ***********************************
 sym_advanced_edition   7.2   dd/mm/yyyy   ()   ()   ()   ****************************************
 EOF
   description = "your entitlement file content here"
+}
+variable ssh_private_key {
+  description = "Your private SSH key to remote execute on bare metal cluster nodes."
 }
 variable ssh_public_key {
   description = "Your public SSH key to access your cluster hosts."

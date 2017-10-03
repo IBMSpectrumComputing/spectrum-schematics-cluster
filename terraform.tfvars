@@ -76,9 +76,16 @@ entitlement = ""
 ## use_intranet = true
 ## (optional) create baremetal masters if ture, otherwise create vm masters
 ## master_use_baremetal = false
-## (optional) baremetal preset configuration
+## (optional) baremetal preset configuration, gpu configruations include
+## D2620_128GB_2X1TB_SATA_RAID_1_M60_GPU1, D2690V4_128GB_2X4TB_SATA_RAID_1_K2_GPU2
+## D2620V4_128GB_2X800GB_SSD_RAID_1_K80_GPU2, D2690_256GB_2X4TB_SATA_RAID1_2XM60_GPU_RAID_1
 ## fixed_config_preset = "S1270_32GB_1X1TBSATA_NORAID"
 ## (optional)	specify number of bare metal compute nodes to create
 ## number_of_compute_bare_metal = 0
 ## (optional) specify hostname prefix for bare metal compute nodes
 ## prefix_compute_bare_metal = "bmcompute"
+## {optional) your private SSH key to remote execute on bare metal machines
+## ssh_private_key = <<EOF
+## multiple line supported
+## past your ssh private key here
+## EOF
