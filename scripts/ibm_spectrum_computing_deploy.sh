@@ -19,7 +19,7 @@ function funcSetupProxyService()
 	then
 		if [ -f /etc/redhat-release ]
 		then
-			LOG "\tyum -y install ed tree lsof psmisc nfs-utils net-tools"
+			LOG "\tyum -y install squid"
 			yum -y install squid
 			systemctl enable squid
 			systemctl start squid
@@ -27,10 +27,9 @@ function funcSetupProxyService()
 		then
 			apt-get update
 			export DEBIAN_FRONTEND=noninteractive
+			LOG "\tapt-get -y install squid"
 			apt-get install -y squid
 			sed -i 's/#acl localnet src 10/acl localnet src 10/' /etc/squid/squid.conf
-			sed -i 's/#acl localnet src 172/acl localnet src 10/' /etc/squid/squid.conf
-			sed -i 's/#acl localnet src 192/acl localnet src 10/' /etc/squid/squid.conf
 			sed -i 's/#http_access allow localnet/http_access allow localnet/' /etc/squid/squid.conf
 			systemctl enable squid
 			systemctl restart squid
