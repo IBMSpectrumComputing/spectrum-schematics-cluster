@@ -11,7 +11,7 @@ ibm_sl_api_key = ""
 ## (optional)the datacenter to create vm resources in
 ## datacenter = "tor01"
 ## (optional)the datacenter to create bare metal resources in
-## datacenter = "wdc04"
+## datacenter_bare_metal = "wdc04"
 ## (optional)choose charge method, hourly for true and monthly for false
 ## hourly_billing_master = true
 ## hourly_billing_compute = true
