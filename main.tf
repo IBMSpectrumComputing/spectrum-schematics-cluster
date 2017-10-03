@@ -166,6 +166,7 @@ EOF
   description = "your entitlement file content here"
 }
 variable ssh_private_key {
+  default = ""
   description = "Your private SSH key to remote execute on bare metal cluster nodes."
 }
 variable ssh_public_key {
