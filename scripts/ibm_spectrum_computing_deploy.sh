@@ -1,7 +1,7 @@
 #!/bin/bash
 
 declare -i numbercomputes
-LOG_FILE=/root/deploy_log_${product}
+LOG_FILE=/root/log_deploy_${product}
 
 ##run only once cloud config is not there##
 [ -f /root/user_metadata ] && . /root/user_metadata
@@ -15,11 +15,11 @@ function LOG ()
 
 function funcSetupProxyService()
 {
-	if [ "${role}" == "symhead" -o "${role}" == "lsfmaster" ]
+	if [ "${role}" == "master" ]
 	then
 		if [ -f /etc/redhat-release ]
 		then
-			LOG "\tyum -y install ed tree lsof psmisc nfs-utils net-tools"
+			LOG "\tyum -y install squid"
 			yum -y install squid
 			systemctl enable squid
 			systemctl start squid
@@ -27,9 +27,12 @@ function funcSetupProxyService()
 		then
 			apt-get update
 			export DEBIAN_FRONTEND=noninteractive
+			LOG "\tapt-get -y install squid"
 			apt-get install -y squid
+			sed -i 's/#acl localnet src 10/acl localnet src 10/' /etc/squid/squid.conf
+			sed -i 's/#http_access allow localnet/http_access allow localnet/' /etc/squid/squid.conf
 			systemctl enable squid
-			systemctl start squid
+			systemctl restart squid
 		else
 			echo "not proxy setup"
 		fi
@@ -38,7 +41,7 @@ function funcSetupProxyService()
 
 function funcUseProxyService()
 {
-	if [ "${useintranet}" != "false" -a "${role}" != "symhead" -a "${role}" != "lsfmaster" -a "${role}" != "symde" ]
+	if [ "${useintranet}" != "false" -a "${role}" != "master" -a "${role}" != "symde" ]
 	then
 		export http_proxy=http://${masterprivateipaddress}:3128
 		export https_proxy=http://${masterprivateipaddress}:3128
@@ -79,7 +82,7 @@ function os_config()
 		yum -y install ed tree lsof psmisc nfs-utils net-tools
 	elif [ -f /etc/lsb-release ]
 	then
-		LOG "\tapt-get bash install -y wget curl tree ncompress gettext rpm nfs-kernel-server"
+		LOG "\tapt-get bash install -y wget curl tree ncompress gettext rpm nfs-kernel-server ipcalc"
 		apt-get update
 		export DEBIAN_FRONTEND=noninteractive
 		if  cat /etc/lsb-release | egrep -qi "ubuntu 16"
@@ -108,19 +111,23 @@ function funcGetPublicIp()
 	ip address show | egrep "inet .*global" | egrep -v "inet[ ]+10\." | head -1 | awk '{print $2}' | sed -e 's/\/.*//'
 }
 
-function funcGetIPCIDR()
-{
-	ip address show | egrep "inet .*global" | egrep "inet[ ]+10\." | head -1 | awk '{print $2}'
-}
-
 function funcStartConfService()
 {
 	mkdir -p /export
 	if [ "$useintranet" == "true" ]
 	then
-		echo -e "/export\t\t${localnetwork}/${localnetmask}(ro,no_root_squash)" > /etc/exports
-		systemctl enable nfs
-		systemctl start nfs
+		echo -e "/export\t\t10.0.0.0/8(ro,no_root_squash) 172.16.0.0/12(ro,no_root_squash) 192.168.0.0/16(ro,no_root_squash)" > /etc/exports
+		if [ -f /etc/redhat-release ]
+		then
+			systemctl enable nfs
+			systemctl start nfs
+		elif [ -f /etc/lsb-release ]
+		then
+			systemctl enable nfs-server
+			systemctl restart nfs-server
+		else
+			echo "not known"
+		fi
 	fi
 }
 
@@ -170,9 +177,6 @@ os_config
 # get local hostname, ipaddress and netmask
 localhostname=$(hostname -s)
 localipaddress=$(funcGetPrivateIp)
-localipcidr=$(funcGetIPCIDR)
-localnetmask=$(ipcalc -m $localipcidr | sed -e 's/.*=//')
-localnetwork=$(ipcalc -n $localipcidr | sed -e 's/.*=//')
 
 # determine to use intranet or internet interface
 funcDetermineConnection
@@ -187,11 +191,11 @@ then
 		funcConnectConfService
 	fi
 else
-	if [ "${role}" != "symde" ]
+	if [ "${role}" == "symde" ]
 	then
-		funcConnectConfService
-	else
 		mkdir -p /export
+	else
+		funcConnectConfService
 	fi
 fi
 
@@ -208,7 +212,7 @@ then
 fi
 
 # create and/or start up upd server/client to update /etc/hosts and other messages
-if [ "$role" == "symhead" ]
+if [ "$role" == "master" ]
 then
 	create_udp_server
 fi
@@ -238,10 +242,10 @@ fi
 export DERBY_DB_HOST=$MASTERHOST
 if [ -z "$clusteradmin" ]
 then
-	if [ "$product" == "SYMPHONY" -o "$product" == "symphony" ]
+	if [ "$product" == "symphony" ]
 	then
 		clusteradmin=egoadmin
-	elif [ "$product" == "LSF" -o "$product" == "lsf"  ]
+	elif [ "$product" == "lsf"  ]
 	then
 		clusteradmin=lsfadmin
 	else
@@ -260,7 +264,7 @@ app_depend
 download_packages
 
 # generate entitlement file or wait for download
-if [ "${ROLE}" == "symhead" -o "${ROLE}" == "lsfmaster" ]
+if [ "${ROLE}" == "master" ]
 then
 	generate_entitlement
 else
@@ -273,52 +277,17 @@ else
 	LOG "\tpackages downloaded ..."
 fi
 
-# install symphony
-SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
-if [ "$PRODUCT" == "SYMPHONY" -o "$PRODUCT" == "symphony" ]
+#deploy product 
+if [ "$PRODUCT" == "symphony" ]
 then
-	install_symphony >> $LOG_FILE 2>&1
-	configure_symphony >> $LOG_FILE 2>&1
-	update_profile_d
-	start_symphony >> $LOG_FILE 2>&1
-	sleep 120 
-	## watch 2 more rounds to make sure symhony service is running
-	declare -i ROUND=0
-	while [ $ROUND -lt 2 ]
-	do
-		if [ "$ROLE" == "symde" ]
-		then
-			break
-		fi
-		if ! ps ax | egrep "opt.ibm.*lim" | grep -v grep > /dev/null
-		then
-			start_symphony
-			sleep 120
-			continue
-		else
-			sleep 20
-			. ${SOURCE_PROFILE}
-			ROUND=$((ROUND+1))
-			## prepare demo examples
-			LOG "prepare demo examples ..."
-			LOG "\tlogging in ..."
-			egosh user logon -u Admin -x Admin
-			LOG "\tlogged in ..."
-			LOG "create /SampleAppCPP consumer ..."
-			egosh consumer add "/SampleAppCPP" -a Admin -u Guest -e egoadmin -g "ManagementHosts,ComputeHosts" >> $LOG_FILE 2>&1
-			LOG "\tconsumer /SampleAppCPP created"
-			break
-		fi
-	done
-	echo "$PRODUCT $VERSION $ROLE ready `date`" >> /root/application-ready
-	LOG "symphony cluster is now ready ..."
-	LOG "generating symphony post configuration activity"
-	funcGeneratePost
+	SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
+	deploy_product
 
 # install LSF
-elif [ "$PRODUCT" == "LSF" -o "$PRODUCT" == "lsf" ]
+elif [ "$PRODUCT" == "lsf" ]
 then
 	echo installing spectrum computing LSF
+	deploy_product
 else
 	echo "unsupported product $PRODUCT `date`" >> /root/application-failed
 fi

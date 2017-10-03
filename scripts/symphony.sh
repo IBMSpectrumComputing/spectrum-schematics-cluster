@@ -6,7 +6,7 @@ function add_admin_user()
 {
 	user_id=`id $1 2>>/dev/null`
 	if [ "$?" != "0" ]; then
-		useradd -d /home/$1 -s /bin/bash $1 >/dev/null 2>&1
+		useradd -d /home/$1 -m -s /bin/bash $1 >/dev/null 2>&1
 		ls /home/$1 > /dev/null
 	else
 		LOG "User $1 exists already."
@@ -67,7 +67,7 @@ function update_profile_d()
 {
 	if [ -d /etc/profile.d ]
 	then
-		if [ "${ROLE}" == "symhead" -o "${ROLE}" == 'symcompute' ]
+		if [ "${ROLE}" == "master" -o "${ROLE}" == 'compute' ]
 		then
 			echo "[ -f /opt/ibm/spectrumcomputing/profile.platform ] && source /opt/ibm/spectrumcomputing/profile.platform" > /etc/profile.d/symphony.sh
 			echo "[ -f /opt/ibm/spectrumcomputing/cshrc.platform ] && source /opt/ibm/spectrumcomputing/cshrc.platform" > /etc/profile.d/symphony.csh
@@ -86,11 +86,25 @@ function update_profile_d()
 function app_depend()
 {
 	LOG "handle symphony dependancy ..."
-	if [ "${PRODUCT}" == "SYMPHONY" -o "${PRODUCT}" == "symphony" ]
+	if [ "${PRODUCT}" == "symphony" ]
 	then
-		LOG "\tyum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd"
-		yum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd
-	elif [ "${PRODUCT}" == "LSF" -o "${PRODUCT}" == "lsf" ]
+		if [ -f /etc/redhat-release ]
+		then
+			LOG "\tyum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd"
+			yum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd
+		elif [ -f /etc/lsb-release ]
+		then
+			LOG "\tapt-get install -y gcc g++ openjdk-8-jdk make"
+			if  cat /etc/lsb-release | egrep -qi "ubuntu 16"
+			then
+				apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages gcc g++ openjdk-8-jdk make
+			else
+				apt-get install -y --force-yes gcc g++ openjdk-7-jdk make
+			fi
+		else
+			echo "unknown"
+		fi
+	elif [ "${PRODUCT}" == "lsf" ]
 	then
 		LOG "...handle lsf dependancy"
 	else
@@ -103,7 +117,7 @@ function download_packages()
 	if [ "$MASTERHOSTNAMES" == "$MASTERHOST" ]
 	then
 		# we can get the package from anywhere applicable, then export through nfs://export, not implemented here yet
-		if [ "${PRODUCT}" == "SYMPHONY" -o "$PRODUCT" == "symphony" ]
+		if [ "$PRODUCT" == "symphony" ]
 		then
 			LOG "download symphony packages ..."
 			mkdir -p /export/symphony/${VERSION}
@@ -113,15 +127,15 @@ function download_packages()
 			else
 				ver_in_pkg=${VERSION}
 			fi
-			if [ "$ROLE" == 'symhead' -o "${ROLE}" == 'lsfmaster' ]
+			if [ "$ROLE" == 'master' ]
 			then
-				LOG "\twget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin"
-				cd /export/symphony/${VERSION} && wget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin
+				LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin"
+				cd /export/symphony/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin
 				touch /export/download_finished
 			else
 				if [ "$useintranet" == 'false' ]
 				then
-					if [ "${ROLE}" == "symcompute" ]
+					if [ "${ROLE}" == "compute" ]
 					then
 						LOG "\twget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin"
 						cd /export/symphony/${VERSION} && wget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin
@@ -151,7 +165,7 @@ function download_packages()
 
 function generate_entitlement()
 {
-	if [ "$PRODUCT" == "SYMPHONY" -o "$PRODUCT" == "symphony" ]
+	if [ "$PRODUCT" == "symphony" ]
 	then
 		if [ -n "$entitlement" ]
 		then
@@ -175,7 +189,7 @@ function install_symphony()
 			sh /export/symphony/${VERSION}/symde-7.2.0.0_x86_64.bin --quiet
 		fi
 	else
-		if [ "${ROLE}" == "symcompute" ]
+		if [ "${ROLE}" == "compute" ]
 		then
 			export EGOCOMPUTEHOST=Y
 		fi
@@ -197,7 +211,7 @@ function install_symphony()
 
 function start_symphony()
 {
-	if [ "${ROLE}" == "symhead" -o "${ROLE}" == "symcompute" ]
+	if [ "${ROLE}" == "master" -o "${ROLE}" == "compute" ]
 	then
 		LOG "\tstart symphony..."
 		if [ -f /etc/redhat-release ]
@@ -219,7 +233,7 @@ function configure_symphony()
 	if [ "$MASTERHOSTNAMES" == "$MASTERHOST" ]
 	then
 		# no failover
-		if [ "${ROLE}" == "symhead" ]
+		if [ "${ROLE}" == "master" ]
 		then
 			LOG "configure symphony master ..."
 			LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}\""
@@ -231,7 +245,7 @@ function configure_symphony()
 			then
 				sed -ibak "s/\(^${MASTERHOST} .*\)(linux)\(.*\)/\1(linux mg)\2/" /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.${clustername}
 			fi
-		elif [ "$ROLE" == "symcompute" ]
+		elif [ "$ROLE" == "compute" ]
 		then
 			LOG "configure symphony compute node ..."
 			LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f\""
@@ -241,12 +255,13 @@ function configure_symphony()
 			LOG "configure symphony de node ..."
 			sed -i "s/^EGO_MASTER_LIST=.*/EGO_MASTER_LIST=${MASTERHOST}/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
 			sed -i "s/^EGO_KD_PORT=.*/EGO_KD_PORT=7870/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
+			sed -i 's/$version = "3"/$version = "3" -o $version = "4"/' /opt/ibm/spectrumcomputing/symphonyde/de72/conf/profile.symclient
 			LOG "\tconfigured symphony de node ..."
 		else
 			echo nothing to do
 		fi
 	fi
-	if [ "${ROLE}" == "symhead" -o "${ROLE}" == "symcompute" ]
+	if [ "${ROLE}" == "master" -o "${ROLE}" == "compute" ]
 	then
 		LOG "prepare to start symphony cluster ..."
 		LOG "\tegosetrc.sh; egosetsudoers.sh"
@@ -275,14 +290,14 @@ then
 		fi
 	done
 	echo -e "\t...logged on to soam client" >> ${LOG_FILE}
-	echo -e "\twait 2 minutes for the muster to create consumer" >> ${LOG_FILE}
+	echo -e "\twait 2 minutes for the master to create consumer" >> ${LOG_FILE}
 	sleep 150
 	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; make ; cd Output; gzip SampleServiceCPP; soamdeploy add SampleServiceCPP -p SampleServiceCPP.gz -c \"/SampleAppCPP\""
 	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; sed -ibak 's/<SSM resReq/<SSM resourceGroupName=\"ManagementHosts\" resReq/' SampleApp.xml; sed -ibak 's/preStartApplication=/resourceGroupName=\"ComputeHosts\" preStartApplication=/' SampleApp.xml; soamreg SampleApp.xml" >> $LOG_FILE 2>&1
 	echo -e "\tSampleAppCPP registered..." >> ${LOG_FILE}
 	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp/Output; ./SyncClient ; sleep 5; ./AsyncClient" >> $LOG_FILE 2>&1
 
-elif [ "${ROLE}" == 'symhead' ]
+elif [ "${ROLE}" == 'master' ]
 then
 	if [ ! -f /etc/checkfailover ]
 	then
@@ -304,5 +319,45 @@ else
 fi
 ENDF
 chmod +x /tmp/post.sh
+}
+
+function deploy_product() {
+	install_symphony >> $LOG_FILE 2>&1
+	configure_symphony >> $LOG_FILE 2>&1
+	update_profile_d
+	start_symphony >> $LOG_FILE 2>&1
+	sleep 120 
+	## watch 2 more rounds to make sure symhony service is running
+	declare -i ROUND=0
+	while [ $ROUND -lt 2 ]
+	do
+		if [ "$ROLE" == "symde" ]
+		then
+			break
+		fi
+		if ! ps ax | egrep "opt.ibm.*lim" | grep -v grep > /dev/null
+		then
+			start_symphony
+			sleep 120
+			continue
+		else
+			sleep 20
+			. ${SOURCE_PROFILE}
+			ROUND=$((ROUND+1))
+			## prepare demo examples
+			LOG "prepare demo examples ..."
+			LOG "\tlogging in ..."
+			egosh user logon -u Admin -x Admin
+			LOG "\tlogged in ..."
+			LOG "create /SampleAppCPP consumer ..."
+			egosh consumer add "/SampleAppCPP" -a Admin -u Guest -e egoadmin -g "ManagementHosts,ComputeHosts" >> $LOG_FILE 2>&1
+			LOG "\tconsumer /SampleAppCPP created"
+			break
+		fi
+	done
+	echo "$PRODUCT $VERSION $ROLE ready `date`" >> /root/application-ready
+	LOG "symphony cluster is now ready ..."
+	LOG "generating symphony post configuration activity"
+	funcGeneratePost
 }
 ##################END FUNCTIONS RELATED######################

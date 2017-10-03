@@ -6,8 +6,8 @@ This repository can be forked or directly used in IBM Bluemix Schematics. You si
 
 ## Release Information
 
-* IBM Spectrum Symphony Cluster on Schematics
-* Supported Product: symphony v7.2.0.0
+* IBM Spectrum Symphony/LSF Cluster on Schematics
+* Supported Product: symphony latest, lsf latest
 
 ## Contents
 
@@ -81,7 +81,7 @@ To run this project locally execute the following steps:
   - use softlayer web GUI
   - use bluemix cli
     - bluemix sl vs list
-    - tail -f /root/sym_deploy_log
+    - tail -f /root/deploy_log_product
 - normally you should wait 10 minutes before accessing the web GUI
 
 ### all variables
@@ -90,16 +90,18 @@ To run this project locally execute the following steps:
 |**ibm_bmx_api_key**|bluemix api key||
 |**ibm_sl_username**|softlayer username||
 |**ibm_sl_api_key**|softlayer api key||
-|datacenter|data center to create nodes in|dal12|
+|datacenter|data center to create vm nodes in|dal12|
+|datacenteri_bare_meta|data center to create bare metal nodes in|wdc04|
 |hourly_billing_master|bill on hourly usage for master nodes|true|
 |hourly_billing_compute|bill on hourly usage for compute nodes|true|
 ||||
 |**ssh_public_key**|ssh fingerprint to access cluster nodes||
+|ssh_private_key**|ssh fingerprint for provisioners on bare metal cluster nodes(multiline)||
 |ssh_key_label|label for your ssh public key|ssh_compute_key|
 |ssh_key_note|description for your ssh public key|ssh key for cluster hosts|
 ||||
 |**entitlement**|entitlement content to use the product|""|
-|product|cluster product to deploy|symphony|
+|product|cluster product to deploy: symphony or lsf|symphony|
 |version|version of the cluster product|latest|
 |cluster_admin|admin account of the cluster|egoadmin|
 |cluster_name|name of the cluster|mycluster|
@@ -109,7 +111,8 @@ To run this project locally execute the following steps:
 |prefix_master|hostname prefix for master nodes|master|
 |prefix_compute|hostname prefix for compute nodes|compute|
 |prefix_dehost|hostname prefix for development nodes|dehost|
-|number_of_compute|number of compute nodes|2|
+|number_of_compute|number of vm compute nodes|2|
+|number_of_compute_bare_metal|number of bare metal compute nodes|2|
 |number_of_dehost|number of development nodes|1|
 |network_speed_master|network interface speed for master nodes|1000|
 |network_speed_compute|network interface speed for compute nodes|1000|
