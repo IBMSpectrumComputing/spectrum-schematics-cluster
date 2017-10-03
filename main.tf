@@ -89,7 +89,7 @@ resource "ibm_compute_bare_metal" "computes" {
   private_network_only        = false
   connection {
     user = "root"
-    private_key = "${file(pathexpand("~/.ssh/id_rsa"))}"
+    private_key = "${var.ssh_private_key}"
     host = "${self.public_ipv4_address}"
   }
   provisioner "local-exec" {
@@ -253,7 +253,11 @@ variable memory_in_mb_compute {
 }
 variable os_reference {
   default = "CENTOS_7_64"
-  description = "specify which OS to use for your cluster"
+  description = "specify which OS to use for your cluster nodes"
+}
+variable os_reference_bare_metal {
+  default = "UBUNTU_16_64"
+  description = "specify which OS to use for your bare metal nodes"
 }
 variable master_use_bare_metal {
   default = "false"

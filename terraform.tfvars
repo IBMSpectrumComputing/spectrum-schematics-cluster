@@ -47,7 +47,7 @@ entitlement = ""
 ## cluster_name = "mycluster"
 
 ## (optional)	specify OS to use for your cluster
-## os_reference = "CENTOS_LATEST"
+## os_reference = "CENTOS_7_64"
 ## (optional)	specify dns domain name
 ## domain_name = "domain.com"
 ## (optional)	specify host name prefix for master/compute/development nodes
@@ -76,6 +76,8 @@ entitlement = ""
 ## use_intranet = true
 ## (optional) create baremetal masters if ture, otherwise create vm masters
 ## master_use_baremetal = false
+## (optional)	specify OS to use for your bare metal nodes
+## os_reference_bare_metal = "UBUNTU_16_64"
 ## (optional) baremetal preset configuration, gpu configruations include
 ## D2620_128GB_2X1TB_SATA_RAID_1_M60_GPU1, D2690V4_128GB_2X4TB_SATA_RAID_1_K2_GPU2
 ## D2620V4_128GB_2X800GB_SSD_RAID_1_K80_GPU2, D2690_256GB_2X4TB_SATA_RAID1_2XM60_GPU_RAID_1
