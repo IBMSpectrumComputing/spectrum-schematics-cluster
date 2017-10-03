@@ -94,17 +94,17 @@ function app_depend()
 			yum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd
 		elif [ -f /etc/lsb-release ]
 		then
-			LOG "\tapt-get install -y gcc g++ openjdk-8-jdk"
+			LOG "\tapt-get install -y gcc g++ openjdk-8-jdk make"
 			if  cat /etc/lsb-release | egrep -qi "ubuntu 16"
 			then
-				apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages gcc g++ openjdk-8-jdk
+				apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages gcc g++ openjdk-8-jdk make
 			else
-				apt-get install -y --force-yes gcc g++ openjdk-7-jdk
+				apt-get install -y --force-yes gcc g++ openjdk-7-jdk make
 			fi
 		else
 			echo "unknown"
 		fi
-	elif [ "${PRODUCT}" == "LSF" -o "${PRODUCT}" == "lsf" ]
+	elif [ "${PRODUCT}" == "lsf" ]
 	then
 		LOG "...handle lsf dependancy"
 	else

@@ -82,14 +82,14 @@ function os_config()
 		yum -y install ed tree lsof psmisc nfs-utils net-tools
 	elif [ -f /etc/lsb-release ]
 	then
-		LOG "\tapt-get bash install -y wget curl tree ncompress gettext rpm nfs-kernel-server ipcalc make"
+		LOG "\tapt-get bash install -y wget curl tree ncompress gettext rpm nfs-kernel-server ipcalc"
 		apt-get update
 		export DEBIAN_FRONTEND=noninteractive
 		if  cat /etc/lsb-release | egrep -qi "ubuntu 16"
 		then
-			apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages  wget curl tree ncompress gettext rpm nfs-kernel-server make
+			apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages  wget curl tree ncompress gettext rpm nfs-kernel-server
 		else
-			apt-get install -y --force-yes  wget curl tree ncompress gettext rpm nfs-kernel-server make
+			apt-get install -y --force-yes  wget curl tree ncompress gettext rpm nfs-kernel-server
 		fi
 	else
 		echo "os_config not handled"
