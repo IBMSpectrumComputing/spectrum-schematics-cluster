@@ -33,7 +33,7 @@ function funcSetupProxyService()
 			sed -i 's/#acl localnet src 192/acl localnet src 10/' /etc/squid/squid.conf
 			sed -i 's/#http_access allow localnet/http_access allow localnet/' /etc/squid/squid.conf
 			systemctl enable squid
-			systemctl start squid
+			systemctl restart squid
 		else
 			echo "not proxy setup"
 		fi
@@ -124,8 +124,8 @@ function funcStartConfService()
 			systemctl start nfs
 		elif [ -f /etc/lsb-release ]
 		then
-			systemctl enable nfs-kernel-server
-			systemctl start nfs-kernel-server
+			systemctl enable nfs-server
+			systemctl restart nfs-server
 		else
 			echo "not known"
 		fi
