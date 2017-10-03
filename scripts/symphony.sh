@@ -6,7 +6,7 @@ function add_admin_user()
 {
 	user_id=`id $1 2>>/dev/null`
 	if [ "$?" != "0" ]; then
-		useradd -d /home/$1 -s /bin/bash $1 >/dev/null 2>&1
+		useradd -d /home/$1 -m -s /bin/bash $1 >/dev/null 2>&1
 		ls /home/$1 > /dev/null
 	else
 		LOG "User $1 exists already."
