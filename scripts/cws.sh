@@ -191,10 +191,10 @@ function start_product()
 		LOG "\tstart ${product} ..."
 		if [ -f /etc/redhat-release ]
 		then
-			service cws start
+			service ego start
 		elif [ -f /etc/lsb-release ]
 		then
-			/etc/rc3.d/S95cws start
+			/etc/rc3.d/S95ego start
 		else
 			echo "no start"
 		fi
