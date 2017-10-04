@@ -42,19 +42,12 @@ resource "ibm_compute_bare_metal" "masters" {
     private_key = "${var.ssh_private_key}"
     host = "${self.public_ipv4_address}"
   }
-  provisioner "local-exec" {
-    command = "mkdir -p files; echo \"numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > files/user_metadata.master"
-  }
-  provisioner "file" {
-    source = "files/user_metadata.master"
-    destination = "/root/user_metadata"
-  }
   provisioner "file" {
     source = "scripts/ibm_spectrum_computing_deploy.sh"
     destination = "/root/ibm_spectrum_computing_deploy.sh"
   }
   provisioner "remote-exec" {
-    inline = "bash /root/ibm_spectrum_computing_deploy.sh"
+    inline = "echo -e \"numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > /root/user_metadata; bash /root/ibm_spectrum_computing_deploy.sh"
   }
 }
 
@@ -87,24 +80,18 @@ resource "ibm_compute_bare_metal" "computes" {
   #user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   #post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
+
   connection {
     user = "root"
     private_key = "${var.ssh_private_key}"
     host = "${self.public_ipv4_address}"
-  }
-  provisioner "local-exec" {
-    command = "mkdir -p files; echo \"useintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > files/user_metadata.compute"
-  }
-  provisioner "file" {
-    source = "files/user_metadata.compute"
-    destination = "/root/user_metadata"
   }
   provisioner "file" {
     source = "scripts/ibm_spectrum_computing_deploy.sh"
     destination = "/root/ibm_spectrum_computing_deploy.sh"
   }
   provisioner "remote-exec" {
-    inline = "bash /root/ibm_spectrum_computing_deploy.sh"
+    inline = "echo -e \"useintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > /root/user_metadata; bash /root/ibm_spectrum_computing_deploy.sh"
   }
 }
 

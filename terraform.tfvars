@@ -75,7 +75,7 @@ entitlement = ""
 ## (optional) specify if to resolve hostnames with intranet ip addresses
 ## use_intranet = true
 ## (optional) create baremetal masters if ture, otherwise create vm masters
-## master_use_baremetal = false
+## master_use_bare_metal = false
 ## (optional)	specify OS to use for your bare metal nodes
 ## os_reference_bare_metal = "UBUNTU_16_64"
 ## (optional) baremetal preset configuration, gpu configruations include

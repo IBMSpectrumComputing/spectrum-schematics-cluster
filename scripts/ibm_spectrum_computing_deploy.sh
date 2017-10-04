@@ -1,10 +1,10 @@
 #!/bin/bash
 
 declare -i numbercomputes
+[ -f /root/user_metadata ] && . /root/user_metadata
 LOG_FILE=/root/log_deploy_${product}
 
 ##run only once cloud config is not there##
-[ -f /root/user_metadata ] && . /root/user_metadata
 [ -f /tmp/deploy ] && exit || touch /tmp/deploy
 
 ###################COMMON SHELL FUNCTIONS#################
