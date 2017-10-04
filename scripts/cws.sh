@@ -97,8 +97,8 @@ function update_profile_d()
 
 function app_depend()
 {
-	LOG "handle symphony dependancy ..."
-	if [ "${PRODUCT}" == "symphony" ]
+	LOG "handle cws dependancy ..."
+	if [ "${PRODUCT}" == "cws" ]
 	then
 		if [ -f /etc/redhat-release ]
 		then
@@ -129,43 +129,31 @@ function download_packages()
 	if [ "$MASTERHOSTNAMES" == "$MASTERHOST" ]
 	then
 		# we can get the package from anywhere applicable, then export through nfs://export, not implemented here yet
-		if [ "$PRODUCT" == "symphony" ]
+		if [ "$PRODUCT" == "cws" ]
 		then
-			LOG "download symphony packages ..."
-			mkdir -p /export/symphony/${VERSION}
+			LOG "download cws packages ..."
+			mkdir -p /export/cws/${VERSION}
 			if [ "${VERSION}" == "latest" ]
 			then
-				ver_in_pkg=7.2.0.0
+				ver_in_pkg=2.2.0.0
 			else
 				ver_in_pkg=${VERSION}
 			fi
 			if [ "$ROLE" == 'master' ]
 			then
-				LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin"
-				cd /export/symphony/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin
+				LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/cws/${VERSION}/cws-${ver_in_pkg}_x86_64.bin"
+				cd /export/cws/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/cws/${VERSION}/cws-${ver_in_pkg}_x86_64.bin
 				touch /export/download_finished
 			else
 				if [ "$useintranet" == 'false' ]
 				then
 					if [ "${ROLE}" == "compute" ]
 					then
-						LOG "\twget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin"
-						cd /export/symphony/${VERSION} && wget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/sym-${ver_in_pkg}_x86_64.bin
-						touch /export/download_finished
-					elif [ "${ROLE}" == 'symde' ]
-					then
-						LOG "\twget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/symde-${ver_in_pkg}_x86_64.bin"
-						cd /export/symphony/${VERSION} && wget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/symde-${ver_in_pkg}_x86_64.bin
+						LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/cws/${VERSION}/cws-${ver_in_pkg}_x86_64.bin"
+						cd /export/cws/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/cws/${VERSION}/cws-${ver_in_pkg}_x86_64.bin
 						touch /export/download_finished
 					else
 						echo "no download"
-					fi
-				else
-					if [ "${ROLE}" == 'symde' ]
-					then
-						LOG "\twget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/symde-${ver_in_pkg}_x86_64.bin"
-						cd /export/symphony/${VERSION} && wget -nH -c --limit-rate=10m http://158.85.106.44/export/symphony/${VERSION}/symde-${ver_in_pkg}_x86_64.bin
-						touch /export/download_finished
 					fi
 				fi
 			fi
@@ -177,55 +165,42 @@ function download_packages()
 
 function generate_entitlement()
 {
-	if [ "$PRODUCT" == "symphony" ]
+	if [ "$PRODUCT" == "cws" ]
 	then
 		if [ -n "$entitlement" ]
 		then
 			echo $entitlement | base64 -d > ${ENTITLEMENT_FILE}
-			sed -i 's/\(sym_[a-z]*_edition .*\)/\n\1/' ${ENTITLEMENT_FILE}
+			sed -i 's/\(conductor_spark .*\)/\n\1/' ${ENTITLEMENT_FILE}
 			echo >> ${ENTITLEMENT_FILE}
 		fi
 	fi
 }
 
-function install_symphony()
+function install_product()
 {
 	LOG "installing ${PRODUCT} version ${VERSION} ..."
 	sed -i -e '/7869/d'  -e '/7870/d' -e '/7871/d' /etc/services
-	echo "... trying to install symphony version $VERSION"
-	if [ "${ROLE}" == "symde" ]
+	echo "... trying to install ${PRODUCT} version $VERSION"
+	if [ "${ROLE}" == "compute" ]
 	then
-		if [ "$VERSION" == "latest" -o "$VERSION" = "7.2.0.0" ]
-		then
-			LOG "\tsh /export/symphony/${VERSION}/symde-7.2.0.0_x86_64.bin --quiet"
-			sh /export/symphony/${VERSION}/symde-7.2.0.0_x86_64.bin --quiet
-		fi
+		export EGOCOMPUTEHOST=Y
+	fi
+	if [ "$VERSION" == "latest" -o "$VERSION" = "2.2.0.0" ]
+	then
+		LOG "\tsh /export/cws/${VERSION}/cws-2.2.0.0_x86_64.bin --quiet"
+		sh /export/cws/${VERSION}/cws-2.2.0.0_x86_64.bin --quiet
 	else
-		if [ "${ROLE}" == "compute" ]
-		then
-			export EGOCOMPUTEHOST=Y
-		fi
-		if [ "$VERSION" == "latest" -o "$VERSION" = "7.2.0.0" ]
-		then
-			LOG "\tsh /export/symphony/${VERSION}/sym-7.2.0.0_x86_64.bin --quiet"
-			sh /export/symphony/${VERSION}/sym-7.2.0.0_x86_64.bin --quiet
-		elif [ "$VERSION" == "7.1.2" ]
-		then
-			LOG "\tsh /export/symphony/${VERSION}/sym-7.1.2.0_x86_64.bin --quiet"
-			sh /export/symphony/${VERSION}/sym-7.1.2.0_x86_64.bin --quiet
-		else
-			LOG "\tfailed to install application"
-			echo "... unimplimented version"
-			echo "... failed to install application" >> /root/symphony_failed
-		fi
+		LOG "\tfailed to install application"
+		echo "... unimplimented version"
+		echo "... failed to install application" >> /root/symphony_failed
 	fi
 }
 
-function start_symphony()
+function start_product()
 {
 	if [ "${ROLE}" == "master" -o "${ROLE}" == "compute" ]
 	then
-		LOG "\tstart symphony..."
+		LOG "\tstart ${product} ..."
 		if [ -f /etc/redhat-release ]
 		then
 			service ego start
@@ -238,7 +213,7 @@ function start_symphony()
 	fi
 }
 
-function configure_symphony()
+function configure_product()
 {
 	SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
 	## currently only single master
@@ -247,7 +222,7 @@ function configure_symphony()
 		# no failover
 		if [ "${ROLE}" == "master" ]
 		then
-			LOG "configure symphony master ..."
+			LOG "configure ${PRODUCT} master ..."
 			LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}\""
 			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}"
 			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/named.xml
@@ -259,23 +234,18 @@ function configure_symphony()
 			fi
 		elif [ "$ROLE" == "compute" ]
 		then
-			LOG "configure symphony compute node ..."
+			LOG "configure ${PRODUCT} compute node ..."
 			LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f\""
+			python /tmp/udpclient.py "egomanage egosh service stop elk-elasticsearch"
 			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f"
-		elif [ "$ROLE" == "symde" ]
-		then
-			LOG "configure symphony de node ..."
-			sed -i "s/^EGO_MASTER_LIST=.*/EGO_MASTER_LIST=${MASTERHOST}/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
-			sed -i "s/^EGO_KD_PORT=.*/EGO_KD_PORT=7870/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
-			sed -i 's/$version = "3"/$version = "3" -o $version = "4"/' /opt/ibm/spectrumcomputing/symphonyde/de72/conf/profile.symclient
-			LOG "\tconfigured symphony de node ..."
+			python /tmp/udpclient.py "egomanage egosh service start elk-elasticsearch"
 		else
 			echo nothing to do
 		fi
 	fi
 	if [ "${ROLE}" == "master" -o "${ROLE}" == "compute" ]
 	then
-		LOG "prepare to start symphony cluster ..."
+		LOG "prepare to start ${PRODUCT} cluster ..."
 		LOG "\tegosetrc.sh; egosetsudoers.sh"
 		. ${SOURCE_PROFILE}
 		egosetrc.sh
@@ -287,29 +257,7 @@ function configure_symphony()
 function funcGeneratePost()
 {
 cat << ENDF > /tmp/post.sh
-if [ "${ROLE}" == "symde" ]
-then
-	echo -e "\tpost configuration for DE host" >> ${LOG_FILE}
-	echo -e "\t...logon to soam client" >> ${LOG_FILE}
-	while [ 1 -lt 2 ]
-	do
-		if su - egoadmin -c "soamlogon -u Admin -x Admin" >/dev/null 2>&1
-		then
-			break
-		else
-			echo -e "\t... waiting for cluster" >> ${LOG_FILE}
-			sleep 60
-		fi
-	done
-	echo -e "\t...logged on to soam client" >> ${LOG_FILE}
-	echo -e "\twait 2 minutes for the master to create consumer" >> ${LOG_FILE}
-	sleep 150
-	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; make ; cd Output; gzip SampleServiceCPP; soamdeploy add SampleServiceCPP -p SampleServiceCPP.gz -c \"/SampleAppCPP\""
-	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; sed -ibak 's/<SSM resReq/<SSM resourceGroupName=\"ManagementHosts\" resReq/' SampleApp.xml; sed -ibak 's/preStartApplication=/resourceGroupName=\"ComputeHosts\" preStartApplication=/' SampleApp.xml; soamreg SampleApp.xml" >> $LOG_FILE 2>&1
-	echo -e "\tSampleAppCPP registered..." >> ${LOG_FILE}
-	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp/Output; ./SyncClient ; sleep 5; ./AsyncClient" >> $LOG_FILE 2>&1
-
-elif [ "${ROLE}" == 'master' ]
+if [ "${ROLE}" == 'master' ]
 then
 	if [ ! -f /etc/checkfailover ]
 	then
@@ -334,11 +282,11 @@ chmod +x /tmp/post.sh
 }
 
 function deploy_product() {
-	install_symphony >> $LOG_FILE 2>&1
-	configure_symphony >> $LOG_FILE 2>&1
+	install_product >> $LOG_FILE 2>&1
+	configure_product >> $LOG_FILE 2>&1
 	update_profile_d
-	start_symphony >> $LOG_FILE 2>&1
-	sleep 120 
+	start_product >> $LOG_FILE 2>&1
+	sleep 120
 	## watch 2 more rounds to make sure symhony service is running
 	declare -i ROUND=0
 	while [ $ROUND -lt 2 ]
@@ -349,7 +297,7 @@ function deploy_product() {
 		fi
 		if ! ps ax | egrep "opt.ibm.*lim" | grep -v grep > /dev/null
 		then
-			start_symphony
+			start_product
 			sleep 120
 			continue
 		else
@@ -361,15 +309,15 @@ function deploy_product() {
 			LOG "\tlogging in ..."
 			egosh user logon -u Admin -x Admin
 			LOG "\tlogged in ..."
-			LOG "create /SampleAppCPP consumer ..."
-			egosh consumer add "/SampleAppCPP" -a Admin -u Guest -e egoadmin -g "ManagementHosts,ComputeHosts" >> $LOG_FILE 2>&1
-			LOG "\tconsumer /SampleAppCPP created"
+		#	LOG "create /SampleAppCPP consumer ..."
+		#	egosh consumer add "/SampleAppCPP" -a Admin -u Guest -e egoadmin -g "ManagementHosts,ComputeHosts" >> $LOG_FILE 2>&1
+		#	LOG "\tconsumer /SampleAppCPP created"
 			break
 		fi
 	done
 	echo "$PRODUCT $VERSION $ROLE ready `date`" >> /root/application-ready
-	LOG "symphony cluster is now ready ..."
-	LOG "generating symphony post configuration activity"
+	LOG "cws cluster is now ready ..."
+	LOG "generating cws post configuration activity"
 	funcGeneratePost
 }
 ##################END FUNCTIONS RELATED######################
