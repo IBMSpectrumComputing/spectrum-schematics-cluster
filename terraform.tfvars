@@ -9,9 +9,9 @@ ibm_sl_username = ""
 ibm_sl_api_key = ""
  
 ## (optional)the datacenter to create vm resources in
-## datacenter = "tor01"
+## datacenter = "dal12"
 ## (optional)the datacenter to create bare metal resources in
-## datacenter_bare_metal = "wdc04"
+## datacenter_bare_metal = "tor01"
 ## (optional)choose charge method, hourly for true and monthly for false
 ## hourly_billing_master = true
 ## hourly_billing_compute = true
@@ -81,7 +81,7 @@ entitlement = ""
 ## (optional) baremetal preset configuration, gpu configruations include
 ## D2620_128GB_2X1TB_SATA_RAID_1_M60_GPU1, D2690V4_128GB_2X4TB_SATA_RAID_1_K2_GPU2
 ## D2620V4_128GB_2X800GB_SSD_RAID_1_K80_GPU2, D2690_256GB_2X4TB_SATA_RAID1_2XM60_GPU_RAID_1
-## fixed_config_preset = "S1270_32GB_1X1TBSATA_NORAID"
+## fixed_config_preset = "S1270_32GB_2X960GBSSD_NORAID"
 ## (optional)	specify number of bare metal compute nodes to create
 ## number_of_compute_bare_metal = 0
 ## (optional) specify hostname prefix for bare metal compute nodes

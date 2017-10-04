@@ -27,7 +27,7 @@ resource "ibm_compute_bare_metal" "masters" {
   hostname          = "${var.prefix_master}${count.index}"
   domain            = "${var.domain_name}"
   ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
-  os_reference_code = "${var.os_reference}"
+  os_reference_code = "${var.os_reference_bare_metal}"
   fixed_config_preset = "${var.fixed_config_preset}"
   datacenter        = "${var.datacenter_bare_metal}"
   hourly_billing    = "${var.hourly_billing_master}"
@@ -78,13 +78,13 @@ resource "ibm_compute_bare_metal" "computes" {
   hostname          = "${var.prefix_compute_bare_metal}${count.index}"
   domain            = "${var.domain_name}"
   ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
-  os_reference_code = "${var.os_reference}"
+  os_reference_code = "${var.os_reference_bare_metal}"
   fixed_config_preset = "${var.fixed_config_preset}"
   datacenter        = "${var.datacenter_bare_metal}"
   hourly_billing    = "${var.hourly_billing_compute}"
   network_speed     = "${var.network_speed_compute}"
   count             = "${var.number_of_compute_bare_metal}"
-  #user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  #user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   #post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
   connection {
@@ -93,7 +93,7 @@ resource "ibm_compute_bare_metal" "computes" {
     host = "${self.public_ipv4_address}"
   }
   provisioner "local-exec" {
-    command = "mkdir -p files; echo \"useintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > files/user_metadata.compute"
+    command = "mkdir -p files; echo \"useintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > files/user_metadata.compute"
   }
   provisioner "file" {
     source = "files/user_metadata.compute"
@@ -119,8 +119,8 @@ resource "ibm_compute_vm_instance" "computes" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.number_of_compute}"
-  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
-  private_network_only        = "${var.use_intranet ? true : false}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_network_only        = "${var.master_use_bare_metal ? false : true}"
 }
 
 resource "ibm_compute_vm_instance" "dehosts" {
@@ -133,8 +133,8 @@ resource "ibm_compute_vm_instance" "dehosts" {
   network_speed     = "${var.network_speed_compute}"
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
-  count             = "${var.number_of_dehost}"
-  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symde\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${var.prefix_master}0\nmasterprivateipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address_private}\nmasterpublicipaddress=${ibm_compute_vm_instance.masters.0.ipv4_address}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  count             = "${var.product == "symphony" ? var.number_of_dehost : 0}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symde\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = false
 }
 
@@ -155,7 +155,7 @@ variable datacenter {
   description = "The datacenter to create resources in."
 }
 variable datacenter_bare_metal {
-  default = "wdc04"
+  default = "tor01"
   description = "The datacenter to create baremetal resources in."
 }
 variable entitlement {
@@ -265,7 +265,7 @@ variable master_use_bare_metal {
   description = "create bare metal masters if ture, otherwise create vm masters"
 }
 variable fixed_config_preset {
-  default = "S1270_32GB_1X1TBSATA_NORAID"
+  default = "S1270_32GB_2X960GBSSD_NORAID"
   description = "softlayer bare metal hardware configuration"
 }
 variable use_intranet {
@@ -288,12 +288,12 @@ variable post_install_script_uri {
 ##############################################################################
 # Outputs
 ##############################################################################
-output "symphony_cluster_master_ip" {
-  value = "${ibm_compute_vm_instance.masters.0.ipv4_address}"
+output "cluster_master_ip" {
+  value = "${element(compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)),0)}"
 }
-output "symphony_cluster_dehost_ip" {
-  value = "${ibm_compute_vm_instance.dehosts.0.ipv4_address}"
+output "symphony_dehost_ip" {
+  value = "${ibm_compute_vm_instance.dehosts.*.ipv4_address}"
 }
-output "symphony_cluster_web_interface" {
-  value = "https://${ibm_compute_vm_instance.masters.0.ipv4_address}:8443/platform"
+output "cluster_web_interface" {
+  value = "https://${element(compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)),0)}:8443/platform"
 }
