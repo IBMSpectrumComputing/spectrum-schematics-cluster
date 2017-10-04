@@ -153,7 +153,7 @@ function download_packages()
 
 function generate_entitlement()
 {
-	if [ "$PRODUCT" == "cws"]
+	if [ "$PRODUCT" == "cws" ]
 	then
 		if [ -n "$entitlement" ]
 		then
