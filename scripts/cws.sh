@@ -34,13 +34,16 @@ while True:
 		s.sendto("done", addr)
 	elif re.match(r'^egomanage', data, re.I):
 		command = data.strip().split()[1:]
-		if len(command) == 4 and command[2].strip() == "stop":
-			output = subprocess.check_output(". /opt/ibm/spectrumcomputing/profile.platform; egosh service %s %s; exit" % (command[2], command[3]), shell=True)
+		if len(command) == 4:
+			if command[2].strip() == "stop":
+				output = subprocess.check_output(". /opt/ibm/spectrumcomputing/profile.platform; egosh service %s %s; exit 0" % (command[2], command[3]), shell=True)
+			else:
+				time.sleep(random.randint(1,60))
+				output = subprocess.check_output(". /opt/ibm/spectrumcomputing/profile.platform; egosh service %s %s; exit 0" % (command[2], command[3]), shell=True)
+			print(output)
+			s.sendto(output, addr)
 		else:
-			time.sleep(random.randint(1,60))
-			output = subprocess.check_output(". /opt/ibm/spectrumcomputing/profile.platform; egosh service %s %s; exit" % (command[2], command[3]), shell=True)
-		print(output)
-		s.sendto(output, addr)
+			s.sendto("notdone", addr)
 	elif re.match(r'^queryproxy', data, re.I):
 		output = subprocess.check_output("ps ax | egrep -i \"bin.squid\" | grep -v grep; exit 0",shell=True)
 		if re.match(r'.*squid',output):
