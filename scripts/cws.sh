@@ -233,7 +233,9 @@ function configure_product()
 		then
 			LOG "configure ${PRODUCT} compute node ..."
 			LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f\""
+			python /tmp/udpclient.py "egomanage egosh service stop elk-elasticsearch"
 			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f"
+			python /tmp/udpclient.py "egomanage egosh service start elk-elasticsearch"
 		else
 			echo nothing to do
 		fi
