@@ -170,7 +170,7 @@ function generate_entitlement()
 		if [ -n "$entitlement" ]
 		then
 			echo $entitlement | base64 -d > ${ENTITLEMENT_FILE}
-			sed -i 's/\(cws_[a-z]*_edition .*\)/\n\1/' ${ENTITLEMENT_FILE}
+			sed -i 's/\(conductor_spark .*\)/\n\1/' ${ENTITLEMENT_FILE}
 			echo >> ${ENTITLEMENT_FILE}
 		fi
 	fi
