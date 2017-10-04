@@ -20,7 +20,7 @@ function create_udp_server()
 #!/usr/bin/env python
 
 ETC_HOSTS = '/etc/hosts'
-import re, socket, subprocess
+import re, socket, subprocess, time, random
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind(('0.0.0.0',9999))
 while True:
@@ -32,6 +32,15 @@ while True:
 			with open(ETC_HOSTS,'a') as f:
 				f.write("%s\t%s\t%s\n" % (record[0],record[1],record[2]))
 		s.sendto("done", addr)
+	elif re.match(r'^egomanage', data, re.I):
+		command = data.strip().split()[1:]
+		if len(command) == 4 and command[2].strip() == "stop":
+			output = subprocess.check_output(". /opt/ibm/spectrumcomputing/profile.platform; egosh service %s %s; exit" % (command[2], command[3]), shell=True)
+		else:
+			time.sleep(random.randint(1,60))
+			output = subprocess.check_output(". /opt/ibm/spectrumcomputing/profile.platform; egosh service %s %s; exit" % (command[2], command[3]), shell=True)
+		print(output)
+		s.sendto(output, addr)
 	elif re.match(r'^queryproxy', data, re.I):
 		output = subprocess.check_output("ps ax | egrep -i \"bin.squid\" | grep -v grep; exit 0",shell=True)
 		if re.match(r'.*squid',output):
