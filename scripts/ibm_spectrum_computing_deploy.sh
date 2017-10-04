@@ -242,7 +242,7 @@ fi
 export DERBY_DB_HOST=$MASTERHOST
 if [ -z "$clusteradmin" ]
 then
-	if [ "$product" == "symphony" ]
+	if [ "$product" == "symphony" -o "$product" == "cws" ]
 	then
 		clusteradmin=egoadmin
 	elif [ "$product" == "lsf"  ]
@@ -281,6 +281,11 @@ fi
 if [ "$PRODUCT" == "symphony" ]
 then
 	SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
+	deploy_product
+
+elif [ "$PRODUCT" == "cws" ]
+then
+	echo installing spectrum computing CWS 
 	deploy_product
 
 # install LSF
