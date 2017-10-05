@@ -94,14 +94,14 @@ function os_config()
 		yum -y install ed tree lsof psmisc nfs-utils net-tools
 	elif [ -f /etc/lsb-release ]
 	then
-		LOG "\tapt-get bash install -y wget curl tree ncompress gettext rpm nfs-kernel-server ipcalc"
+		LOG "\tapt-get bash install -y wget curl tree ncompress gettext rpm nfs-kernel-server acl"
 		apt-get update
 		export DEBIAN_FRONTEND=noninteractive
 		if  cat /etc/lsb-release | egrep -qi "ubuntu 16"
 		then
-			apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages  wget curl tree ncompress gettext rpm nfs-kernel-server
+			apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages  wget curl tree ncompress gettext rpm nfs-kernel-server acl
 		else
-			apt-get install -y --force-yes  wget curl tree ncompress gettext rpm nfs-kernel-server
+			apt-get install -y --force-yes  wget curl tree ncompress gettext rpm nfs-kernel-server acl
 		fi
 	else
 		echo "os_config not handled"
@@ -126,20 +126,17 @@ function funcGetPublicIp()
 function funcStartConfService()
 {
 	mkdir -p /export
-	if [ "$useintranet" == "true" ]
+	echo -e "/export\t\t10.0.0.0/8(ro,no_root_squash) 172.16.0.0/12(ro,no_root_squash) 192.168.0.0/16(ro,no_root_squash)" > /etc/exports
+	if [ -f /etc/redhat-release ]
 	then
-		echo -e "/export\t\t10.0.0.0/8(ro,no_root_squash) 172.16.0.0/12(ro,no_root_squash) 192.168.0.0/16(ro,no_root_squash)" > /etc/exports
-		if [ -f /etc/redhat-release ]
-		then
-			systemctl enable nfs
-			systemctl start nfs
-		elif [ -f /etc/lsb-release ]
-		then
-			systemctl enable nfs-server
-			systemctl restart nfs-server
-		else
-			echo "not known"
-		fi
+		systemctl enable nfs
+		systemctl start nfs
+	elif [ -f /etc/lsb-release ]
+	then
+		systemctl enable nfs-server
+		systemctl restart nfs-server
+	else
+		echo "not known"
 	fi
 }
 

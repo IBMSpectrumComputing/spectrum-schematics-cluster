@@ -6,8 +6,8 @@ This repository can be forked or directly used in IBM Bluemix Schematics. You si
 
 ## Release Information
 
-* IBM Spectrum Symphony/LSF Cluster on Schematics
-* Supported Product: symphony latest, lsf latest
+* IBM Spectrum Symphony/CWS/LSF Cluster on Schematics
+* Supported Product Version: symphony latest, cws latest, lsf latest
 
 ## Contents
 
@@ -15,13 +15,24 @@ This repository can be forked or directly used in IBM Bluemix Schematics. You si
 * Introduction
 * Usage
 * Release Notes
+* Advanced Usage
 * Available Datacenters
 * Community Contribution
 * Copyright
  
 ## Default Topoloty
 
+### default symphony cluster
+
 ![default installation topology](https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/images/symdefault.png)
+
+### default cws cluster
+
+![default installation topology](https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/images/cwsdefault.png)
+
+### default lsf cluster
+
+![default installation topology](https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/images/lsfdefault.png)
 
 ## Introduction
 
@@ -70,7 +81,7 @@ To run this project locally execute the following steps:
     - ibm_sl_username, ibm_sl_api_key
     - ssh_public_key
   - Variables (optional)
-    - use_intranet = false will create the cluster communicating via public IP address
+    - product = symphony|cws|lsf to create deferrent clusters
     - refer to the file terraform.tfvars
 - plan and view plan log
 - apply and view apply log
@@ -81,7 +92,7 @@ To run this project locally execute the following steps:
   - use softlayer web GUI
   - use bluemix cli
     - bluemix sl vs list
-    - tail -f /root/deploy_log_product
+    - tail -f /root/log_deploy_product
 - normally you should wait 10 minutes before accessing the web GUI
 
 ### all variables
@@ -91,28 +102,25 @@ To run this project locally execute the following steps:
 |**ibm_sl_username**|softlayer username||
 |**ibm_sl_api_key**|softlayer api key||
 |datacenter|data center to create vm nodes in|dal12|
-|datacenteri_bare_meta|data center to create bare metal nodes in|wdc04|
 |hourly_billing_master|bill on hourly usage for master nodes|true|
 |hourly_billing_compute|bill on hourly usage for compute nodes|true|
 ||||
 |**ssh_public_key**|ssh fingerprint to access cluster nodes||
-|ssh_private_key**|ssh fingerprint for provisioners on bare metal cluster nodes(multiline)||
 |ssh_key_label|label for your ssh public key|ssh_compute_key|
 |ssh_key_note|description for your ssh public key|ssh key for cluster hosts|
 ||||
 |**entitlement**|entitlement content to use the product|""|
-|product|cluster product to deploy: symphony or lsf|symphony|
+|product|cluster product to deploy: symphony or cws or lsf|symphony|
 |version|version of the cluster product|latest|
 |cluster_admin|admin account of the cluster|egoadmin|
 |cluster_name|name of the cluster|mycluster|
 ||||
-|os_refrence|operating system code to deploy|CENTOS_LATEST|
+|os_refrence|operating system code to deploy|CENTOS_7_64|
 |domain_name|dns domain name to use|domain.com|
 |prefix_master|hostname prefix for master nodes|master|
 |prefix_compute|hostname prefix for compute nodes|compute|
-|prefix_dehost|hostname prefix for development nodes|dehost|
+|prefix_dehost|hostname prefix for symhony development nodes|dehost|
 |number_of_compute|number of vm compute nodes|2|
-|number_of_compute_bare_metal|number of bare metal compute nodes|2|
 |number_of_dehost|number of development nodes|1|
 |network_speed_master|network interface speed for master nodes|1000|
 |network_speed_compute|network interface speed for compute nodes|1000|
@@ -120,7 +128,16 @@ To run this project locally execute the following steps:
 |core_of_compute|cpu cores for compute nodes|1|
 |memory_in_mb_master|memory for master nodes|8192|
 |memory_in_mb_compute|memory for compute nodes|4096|
+||||
+|master_failover|enable HA for masters or not|false|
 |use_intranet|cluster communicate via intranet connection|true|
+|datacenter_bare_metal|data center to create bare metal nodes in|wdc04|
+|master_use_bare_metal|whether create bare metal for cluster masters|false|
+|ssh_private_key|ssh fingerprint for provisioners on bare metal cluster nodes(multiline)||
+|fixed_config_preset|bare metal hardware configurations|S1270_32GB_2X960GBSSD_NORAID|
+|os_refrence_bare_metal|operating system code to deploy on bare metal|UBUNTU_16_64|
+|prefix_compute_bare_metal|hostname prefix for compute nodes|bmcompute|
+|number_of_compute_bare_metal|number of bare metal compute nodes|0|
 
 - please refer to terraform.tfvars and/or main.tf
 
@@ -135,6 +152,23 @@ To run this project locally execute the following steps:
   - **ibm_bmx_api_key**
   - **ibm_sl_username**, **ibm_sl_api_key**
   - **ssh_public_key**
+
+## Advanced Usage
+
+### use internet interface for cluster communication
+
+- set use_intranet = false will force clusters to communicate via internet link
+
+### bare metal support
+
+**Recommend to use standalone ibm-cloud-provider and terraform to deploy bare metal**
+
+Due to the current limit of schematics, bare metal needs to use remote-exec provisioner and in turn requires to provide your ssh private key. To provide private key, you need fork the repository and update terraform.tfvars, there is security concern. This can be solved when next release of ibm-cloud-provider is deployed on schematics.
+
+Since datacenter and fixed_config_preset has to be specified and there is no good way to make sure the selection can be satisfied, you may need to try several times. "D2620V4_128GB_2X800GB_SSD_RAID_1_K80_GPU2" is good GPU preset
+
+- master_use_bare_metal = true will create masters as bare metal servers
+- os_reference_bare_metal is the operating system to deploy on bare metal servers
 
 ## Available Data Centers
 Any of these values is valid for use with the `datacenter` variable:
