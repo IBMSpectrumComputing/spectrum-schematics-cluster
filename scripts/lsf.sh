@@ -214,13 +214,13 @@ function install_product()
 			./lsfinstall -f install.config >>$LOG_FILE 2>&1
 		elif [ "${ROLE}" == "compute" ]
 		then
-			LOG "\t./lsfinstall -f slave.config >>$LOG_FILE"
+			LOG "\t./lsfinstall -s -f slave.config >>$LOG_FILE"
 			sed -i -e "s|# LSF_TOP=\"/usr/...../lsf\"|LSF_TOP=\"/opt/lsf\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
 			sed -i -e "s|# LSF_ADMINS=\"lsfadmin user1 user2\"|LSF_ADMINS=\"$CLUSTERADMIN\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
 			sed -i -e "s|# LSF_SERVER_HOSTS=\"hostm hosta hostb hostc\"|LSF_SERVER_HOSTS=\"${MASTERHOSTNAMES}\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
 			sed -i -e "s|# LSF_ENTITLEMENT_FILE=.*|LSF_ENTITLEMENT_FILE=\"${ENTITLEMENT_FILE}\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
 			cd $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/
-			./lsfinstall -f slave.config >>$LOG_FILE 2>&1
+			./lsfinstall -s -f slave.config >>$LOG_FILE 2>&1
 		else
 			echo "no install"
 		fi
