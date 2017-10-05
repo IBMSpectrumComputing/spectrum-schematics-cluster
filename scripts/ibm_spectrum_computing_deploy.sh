@@ -3,17 +3,20 @@
 declare -i numbercomputes
 
 ##retrieve user_metadata on bare metal
-if [ ! -f /root/user_metadata_inside ]
+if [ ! -f /root/user_metadata_bare_metal ]
 then
 	if dmidecode | egrep -q "HVM|Xen"
 	then
 		echo "on vm instance"
+	elif dmidecode | egrep -q "No SMBIOS nor DMI entry point found"
+	then
+		echo "on vm instance"
 	else
-		wget --no-check-certificate -O /root/user_metadata_inside https://api.service.softlayer.com/rest/v3/SoftLayer_Resource_Metadata/UserMetadata.txt
+		wget --no-check-certificate -O /root/user_metadata_bare_metal https://api.service.softlayer.com/rest/v3/SoftLayer_Resource_Metadata/UserMetadata.txt
 	fi
 fi
 [ -f /root/user_metadata ] && . /root/user_metadata
-[ -f /root/user_metadata_inside ] && . /root/user_metadata_inside
+[ -f /root/user_metadata_bare_metal ] && . /root/user_metadata_bare_metal
 LOG_FILE=/root/log_deploy_${product}
 
 ##run only once cloud config is not there##
