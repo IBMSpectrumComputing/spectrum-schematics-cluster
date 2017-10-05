@@ -276,10 +276,9 @@ app_depend
 download_packages
 
 # generate entitlement file or wait for download
-if [ "${ROLE}" == "master" ]
-then
-	generate_entitlement
-else
+generate_entitlement
+
+if [ "${ROLE}" != "master" ]
 	## wait untils /export/download_finished appears
 	while [ ! -f /export/download_finished ]
 	do
