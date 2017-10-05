@@ -97,7 +97,7 @@ function update_profile_d()
 
 function app_depend()
 {
-	LOG "handle cws dependancy ..."
+	LOG "handle lsf dependancy ..."
 	if [ "${PRODUCT}" == "lsf" ]
 	then
 		if [ -f /etc/redhat-release ]
@@ -131,7 +131,7 @@ function download_packages()
 		# we can get the package from anywhere applicable, then export through nfs://export, not implemented here yet
 		if [ "$PRODUCT" == "lsf" ]
 		then
-			LOG "download cws packages ..."
+			LOG "download lsf packages ..."
 			mkdir -p /export/lsf/${VERSION}
 			if [ "${VERSION}" == "latest" ]
 			then
@@ -145,7 +145,7 @@ function download_packages()
 				LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z"
 				LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z"
 				cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z
-				cd /export/cws/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/cws/${VERSION}/lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z
+				cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z
 				cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/${LSF_INSTALL_PACKAGE}
 				touch /export/download_finished
 			else
@@ -156,7 +156,7 @@ function download_packages()
 						LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z"
 						LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z"
 						cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z
-						cd /export/cws/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/cws/${VERSION}/lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z
+						cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z
 						cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/${LSF_INSTALL_PACKAGE}
 						touch /export/download_finished
 					else
