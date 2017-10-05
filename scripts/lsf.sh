@@ -208,7 +208,7 @@ function install_product()
 			sed -i -e "s|# LSF_ADMINS=\"lsfadmin user1 user2\"|LSF_ADMINS=\"$CLUSTERADMIN\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/install.config
 			sed -i -e "s|# LSF_CLUSTER_NAME=\"cluster1\"|LSF_CLUSTER_NAME=\"$CLUSTERNAME\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/install.config
 			sed -i -e "s|# LSF_MASTER_LIST=\"hostm hosta hostc\"|LSF_MASTER_LIST=\"${MASTERHOSTNAMES}\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/install.config
-			sed -i -e "s|# LSF_ENTITLEMENT_FILE=.*|LSF_ENTITLEMENT_FILE=\"${ENTITLEMENTFILE}\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/install.config
+			sed -i -e "s|# LSF_ENTITLEMENT_FILE=.*|LSF_ENTITLEMENT_FILE=\"${ENTITLEMENT_FILE}\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/install.config
 			sed -i -e "s|# ENABLE_DYNAMIC_HOSTS=\"N\"|ENABLE_DYNAMIC_HOSTS=\"Y\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/install.config
 			cd $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/
 			./lsfinstall -f install.config >>$LOG_FILE 2>&1
@@ -218,7 +218,7 @@ function install_product()
 			sed -i -e "s|# LSF_TOP=\"/usr/share/lsf\"|LSF_TOP=\"/opt/lsf\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
 			sed -i -e "s|# LSF_ADMINS=\"lsfadmin user1 user2\"|LSF_ADMINS=\"$CLUSTERADMIN\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
 			sed -i -e "s|# LSF_MASTER_LIST=\"hostm hosta hostc\"|LSF_MASTER_LIST=\"${MASTERHOSTNAMES}\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
-			sed -i -e "s|# LSF_ENTITLEMENT_FILE=.*|LSF_ENTITLEMENT_FILE=\"${ENTITLEMENTFILE}\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
+			sed -i -e "s|# LSF_ENTITLEMENT_FILE=.*|LSF_ENTITLEMENT_FILE=\"${ENTITLEMENT_FILE}\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
 			cd $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/
 			./lsfinstall -f slave.config >>$LOG_FILE 2>&1
 		else
@@ -236,20 +236,20 @@ function start_product()
 	if [ "${ROLE}" == "master" -o "${ROLE}" == "compute" ]
 	then
 		LOG "\tstart ${product} ..."
-		source /opt/lsf/conf/profile.lsf
-		lsadmin ckconfig >>$LOG_FILE 2>&1
-		lsadmin limstartup >>$LOG_FILE 2>&1
-		lsadmin resstartup >>$LOG_FILE 2>&1
-		badmin hstartup >>$LOG_FILE 2>&1
-	#	if [ -f /etc/redhat-release ]
-	#	then
-	#		service lsf start
-	#	elif [ -f /etc/lsb-release ]
-	#	then
-	#		/etc/rc3.d/S95lsf start
-	#	else
-	#		echo "no start"
-	#	fi
+	#	source /opt/lsf/conf/profile.lsf
+	#	lsadmin ckconfig >>$LOG_FILE 2>&1
+	#	lsadmin limstartup >>$LOG_FILE 2>&1
+	#	lsadmin resstartup >>$LOG_FILE 2>&1
+	#	badmin hstartup >>$LOG_FILE 2>&1
+		if [ -f /etc/redhat-release ]
+		then
+			service lsf start
+		elif [ -f /etc/lsb-release ]
+		then
+			/etc/rc3.d/S95lsf start
+		else
+			echo "no start"
+		fi
 	fi
 }
 
