@@ -215,7 +215,7 @@ function install_product()
 		elif [ "${ROLE}" == "compute" ]
 		then
 			LOG "\t./lsfinstall -f slave.config >>$LOG_FILE"
-			sed -i -e "s|# LSF_TOP=\"/usr/share/lsf\"|LSF_TOP=\"/opt/lsf\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
+			sed -i -e "s|# LSF_TOP=\"/usr/...../lsf\"|LSF_TOP=\"/opt/lsf\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
 			sed -i -e "s|# LSF_ADMINS=\"lsfadmin user1 user2\"|LSF_ADMINS=\"$CLUSTERADMIN\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
 			sed -i -e "s|# LSF_MASTER_LIST=\"hostm hosta hostc\"|LSF_MASTER_LIST=\"${MASTERHOSTNAMES}\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
 			sed -i -e "s|# LSF_ENTITLEMENT_FILE=.*|LSF_ENTITLEMENT_FILE=\"${ENTITLEMENT_FILE}\"|" $DESTINATION_DIR/$LSF_INSTALL_PACKAGENAME/slave.config
