@@ -1,7 +1,19 @@
 #!/bin/bash
 
 declare -i numbercomputes
+
+##retrieve user_metadata on bare metal
+if [ ! -f /root/user_metadata_inside ]
+then
+	if dmidecode | egrep -q "HVM|Xen"
+	then
+		echo "on vm instance"
+	else
+		wget --no-check-certificate -O /root/user_metadata_inside https://api.service.softlayer.com/rest/v3/SoftLayer_Resource_Metadata/UserMetadata.txt
+	fi
+fi
 [ -f /root/user_metadata ] && . /root/user_metadata
+[ -f /root/user_metadata_inside ] && . /root/user_metadata_inside
 LOG_FILE=/root/log_deploy_${product}
 
 ##run only once cloud config is not there##

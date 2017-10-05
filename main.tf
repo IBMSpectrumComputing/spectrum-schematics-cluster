@@ -33,8 +33,8 @@ resource "ibm_compute_bare_metal" "masters" {
   hourly_billing    = "${var.hourly_billing_master}"
   network_speed     = "${var.network_speed_master}"
   count             = "${var.master_use_bare_metal ? 1 : 0}"
-  #user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
-  #post_install_script_uri     = "${var.post_install_script_uri}"
+  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n"
+  post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 
   connection {
@@ -47,7 +47,7 @@ resource "ibm_compute_bare_metal" "masters" {
     destination = "/root/ibm_spectrum_computing_deploy.sh"
   }
   provisioner "remote-exec" {
-    inline = "echo -e \"numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=self.private_network_only\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > /root/user_metadata; bash /root/ibm_spectrum_computing_deploy.sh"
+    inline = "echo -e \"numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > /root/user_metadata; bash /root/ibm_spectrum_computing_deploy.sh"
   }
 }
 
@@ -77,8 +77,8 @@ resource "ibm_compute_bare_metal" "computes" {
   hourly_billing    = "${var.hourly_billing_compute}"
   network_speed     = "${var.network_speed_compute}"
   count             = "${var.number_of_compute_bare_metal}"
-  #user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
-  #post_install_script_uri     = "${var.post_install_script_uri}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 
   connection {
