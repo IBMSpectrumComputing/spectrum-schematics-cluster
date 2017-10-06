@@ -78,7 +78,7 @@ To run this project locally execute the following steps:
   - Variables (required)
     - **entitlement**
     - **ibm_bmx_api_key**
-    - **ibm_sl_username**, **ibm_sl_api_key
+    - **ibm_sl_username**, **ibm_sl_api_key**
     - **ssh_public_key**
   - Variables (optional)
     - product = symphony|cws|lsf to create deferrent clusters
