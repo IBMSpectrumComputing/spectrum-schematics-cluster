@@ -7,7 +7,7 @@ This repository can be forked or directly used in IBM Bluemix Schematics. You si
 ## Release Information
 
 * IBM Spectrum Symphony/CWS/LSF Cluster on Schematics
-* Supported Product Version: symphony latest, cws latest, lsf latest
+* Supported Product Version: symphony latest(7.2.0.0), cws latest(2.2.0.0), lsf latest(10.1)
 
 ## Contents
 
@@ -46,7 +46,7 @@ To use IBM schematics or Terraform with IBM Cloud Provider, you need to gain cer
   - You can retrieve the value from the "SoftLayer Customer Portal", "account" -> "User"
 - **ssh_public_key**
   - your personal ssh public key to access servers on softlayer
-  - you need to have "manage sshkey" capability on softlayersoftlayer
+  - you need to have "manage sshkey" capability on softlayer
 - **entitlement**
   - entitlement that enables use of the cluster software
   - you can obtain a trial entitlement if you do not have one
@@ -76,10 +76,10 @@ To run this project locally execute the following steps:
 - create new environment
   - Source Control URL: use your forked repository url
   - Variables (required)
-    - entitlement
-    - ibm_bmx_api_key
-    - ibm_sl_username, ibm_sl_api_key
-    - ssh_public_key
+    - **entitlement**
+    - **ibm_bmx_api_key**
+    - **ibm_sl_username**, **ibm_sl_api_key
+    - **ssh_public_key**
   - Variables (optional)
     - product = symphony|cws|lsf to create deferrent clusters
     - refer to the file terraform.tfvars
@@ -87,11 +87,12 @@ To run this project locally execute the following steps:
 - apply and view apply log
 - attention
   - this assumes that the cluster will be created in the same private vlan
-  - if for any reason it is not this case, the cluster deployment will fail, you can destroy and apply again
+  - if for any reason it is not this case, the cluster deployment might fail, you can shrink/destroy and apply again
 - (optional) to gain more control of the cluster
   - use softlayer web GUI
   - use bluemix cli
     - bluemix sl vs list
+  - login to softlayer resource directly 
     - tail -f /root/log_deploy_product
 - normally you should wait 10 minutes before accessing the web GUI
 
@@ -110,12 +111,12 @@ To run this project locally execute the following steps:
 |ssh_key_note|description for your ssh public key|ssh key for cluster hosts|
 ||||
 |**entitlement**|entitlement content to use the product|""|
-|product|cluster product to deploy: symphony or cws or lsf|symphony|
-|version|version of the cluster product|latest|
-|cluster_admin|admin account of the cluster|egoadmin|
+|product|cluster product to deploy: [symphony, cws, lsf|symphony|
+|version|version of the cluster product: [latest, 7.2.0.0, 2.2.0.0, 10.1]|latest|
+|cluster_admin|admin account of the cluster: [egoadmin, lsfadmin]|egoadmin|
 |cluster_name|name of the cluster|mycluster|
 ||||
-|os_refrence|operating system code to deploy|CENTOS_7_64|
+|os_refrence|operating system code to deploy: [CENTOS_7_64, UBUNTU_16_64]|CENTOS_7_64|
 |domain_name|dns domain name to use|domain.com|
 |prefix_master|hostname prefix for master nodes|master|
 |prefix_compute|hostname prefix for compute nodes|compute|
@@ -133,7 +134,7 @@ To run this project locally execute the following steps:
 |use_intranet|cluster communicate via intranet connection|true|
 |datacenter_bare_metal|data center to create bare metal nodes in|wdc04|
 |master_use_bare_metal|whether create bare metal for cluster masters|false|
-|ssh_private_key|ssh fingerprint for provisioners on bare metal cluster nodes(multiline)||
+|**ssh_private_key**|ssh fingerprint for provisioners on bare metal cluster nodes(multiline)||
 |fixed_config_preset|bare metal hardware configurations|S1270_32GB_2X960GBSSD_NORAID|
 |os_refrence_bare_metal|operating system code to deploy on bare metal|UBUNTU_16_64|
 |prefix_compute_bare_metal|hostname prefix for compute nodes|bmcompute|
@@ -142,6 +143,17 @@ To run this project locally execute the following steps:
 - please refer to terraform.tfvars and/or main.tf
 
 ## Release Notes
+
+### version 0.4
+
+- Boost version to 0.4 to catchup provider version
+- Support symphony, cws and lsf deployment
+- Support both CENTOS_7_64 and UBUNTU_16_64
+- Bare metal support (experimental)
+  - **never create bare metals with the same hostname and domainname in the same day even after destroy**
+  - bare metal creation require to specify datacenter and preset fixed config, no guarranty of availability
+  - **ssh_private_key**
+  - **master_use_bare_metal** or **number_of_compute_bare_metal**
 
 ### Release initial
 
@@ -168,7 +180,9 @@ Due to the current limit of schematics, bare metal needs to use remote-exec prov
 Since datacenter and fixed_config_preset has to be specified and there is no good way to make sure the selection can be satisfied, you may need to try several times. "D2620V4_128GB_2X800GB_SSD_RAID_1_K80_GPU2" is good GPU preset
 
 - master_use_bare_metal = true will create masters as bare metal servers
+- datacenter_bare_metal is the datacenter where to deploy bare metal servers
 - os_reference_bare_metal is the operating system to deploy on bare metal servers
+- **ssh_privte_key** is required for bare metal so far, specify it in terraform.tfvars
 
 ## Available Data Centers
 Any of these values is valid for use with the `datacenter` variable:
