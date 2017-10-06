@@ -267,7 +267,7 @@ function configure_product()
 		then
 			LOG "configure ${PRODUCT} master ..."
 			sed -i -e "s|LSF_DISABLE_LSRUN=Y|LSF_DISABLE_LSRUN=N|" $LSF_CONF
-			sed -i -e "s|Administrators =.*|Administrators = clusteradmin ${CLUSTERADMIN}|" $LSF_CLUSTER_FILE
+			sed -i -e "s|Administrators =.*|Administrators = ${CLUSTERADMIN}|" $LSF_CLUSTER_FILE
 			sed -i -e "s|#EGO_HOST_ADDR_RANGE|EGO_HOST_ADDR_RANGE|" $LSF_CLUSTER_FILE
 			sed -i -e "s|#FLOAT_CLIENTS_ADDR_RANGE|FLOAT_CLIENTS_ADDR_RANGE|" $LSF_CLUSTER_FILE
 			sed -i -e "s|#FLOAT_CLIENTS|FLOAT_CLIENTS|" $LSF_CLUSTER_FILE
