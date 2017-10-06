@@ -279,6 +279,7 @@ download_packages
 generate_entitlement
 
 if [ "${ROLE}" != "master" ]
+then
 	## wait untils /export/download_finished appears
 	while [ ! -f /export/download_finished ]
 	do
