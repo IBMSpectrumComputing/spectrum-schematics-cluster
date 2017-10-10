@@ -81,8 +81,10 @@ function update_profile_d()
 	then
 		if [ "${ROLE}" == "master" -o "${ROLE}" == 'compute' ]
 		then
-			echo "[ -f /opt/ibm/spectrumcomputing/profile.platform ] && source /opt/ibm/spectrumcomputing/profile.platform" > /etc/profile.d/symphony.sh
-			echo "[ -f /opt/ibm/spectrumcomputing/cshrc.platform ] && source /opt/ibm/spectrumcomputing/cshrc.platform" > /etc/profile.d/symphony.csh
+			echo "[ -f /opt/ibm/spectrumcomputing/profile.platform ] && source /opt/ibm/spectrumcomputing/profile.platform" > /etc/profile.d/spectrumcomputing.sh
+			echo "[ -f /opt/lsf/conf/profile.lsf ] && source /opt/lsf/conf/profile.lsf" >> /etc/profile.d/spectrumcomputing.sh
+			echo "[ -f /opt/ibm/spectrumcomputing/cshrc.platform ] && source /opt/ibm/spectrumcomputing/cshrc.platform" > /etc/profile.d/spectrumcomputing.csh
+			echo "[ -f /opt/lsf/conf/cshrc.lsf ] && source /opt/lsf/conf/cshrc.lsf" >> /etc/profile.d/spectrumcomputing.csh
 		elif [ "${ROLE}" == "symde" ]
 		then
 			echo "[ -f /opt/ibm/spectrumcomputing/symphonyde/de72/profile.platform ] && source /opt/ibm/spectrumcomputing/symphonyde/de72/profile.platform" > /etc/profile.d/symphony.sh
@@ -142,22 +144,35 @@ function download_packages()
 			export LSF_INSTALL_PACKAGE=lsf${ver_in_pkg}_lsfinstall_linux_x86_64.tar.Z
 			if [ "$ROLE" == 'master' ]
 			then
-				LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z"
-				LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z"
-				cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z
-				cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z
-				cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/${LSF_INSTALL_PACKAGE}
+				if echo ${uri_package_additonal} | egrep -qv "additional$"
+				then
+					LOG "\twget -nH -c --no-check-certificate -o /dev/null -O lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z ${uri_package_additional}"
+					cd /export/lsf/${VERSION} && wget -nH -c --no-check-certificate -o /dev/null -O lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z ${uri_package_additional}
+				fi
+				if echo ${uri_package_additonal2} | egrep -qv "additional2$"
+				then
+					LOG "\twget -nH -c --no-check-certificate -o /dev/null -O lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z ${uri_package_additional2}"
+					cd /export/lsf/${VERSION} && wget -nH -c --no-check-certificate -o /dev/null -O lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z ${uri_package_additonal2}
+				fi
+				cd /export/lsf/${VERSION} && wget -nH -c --no-check-certificate -o /dev/null -O ${LSF_INSTALL_PACKAGE} ${uri_package_installer}
 				touch /export/download_finished
 			else
 				if [ "$useintranet" == 'false' ]
 				then
 					if [ "${ROLE}" == "compute" ]
 					then
-						LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z"
-						LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z"
-						cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z
-						cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z
-						cd /export/lsf/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/lsf/${VERSION}/${LSF_INSTALL_PACKAGE}
+						if echo ${uri_package_additonal} | egrep -qv "additional$"
+						then
+							LOG "\twget -nH -c --no-check-certificate -o /dev/null -O lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z ${uri_package_addtional}"
+							cd /export/lsf/${VERSION} && wget -nH -c --no-check-certificate -o /dev/null -O lsf${ver_in_pkg}_linux2.6-glibc2.3-x86_64.tar.Z ${uri_package_additional}
+						fi
+						if echo ${uri_package_additonal2} | egrep -qv "additional2$"
+						then
+							LOG "\twget -nH -c --no-check-certificate -o /dev/null -O lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z ${uri_package_additional2}"
+							cd /export/lsf/${VERSION} && wget -nH -c --no-check-certificate -o /dev/null -O lsf${ver_in_pkg}_lnx310-lib217-x86_64.tar.Z ${uri_package_additional2}
+						fi
+						LOG "\twget -nH -c --no-check-certificate -o /dev/null -O ${LSF_INSTALL_PACKAGE} ${uri_package_installer}
+						cd /export/lsf/${VERSION} && wget -nH -c --no-check-certificate -o /dev/null -O ${LSF_INSTALL_PACKAGE} ${uri_package_installer}
 						touch /export/download_finished
 					else
 						echo "no download"
@@ -172,7 +187,10 @@ function download_packages()
 
 function generate_entitlement()
 {
-	if [ -n "$entitlement" ]
+	if [ -n "$uri_file_entitlement" ]
+	then
+		wget -nH -c --no-check-certificate -O ${ENTITLEMENT_FILE} ${uri_file_entitlement}
+	elif [ -n "$entitlement" ]
 	then
 		echo $entitlement | base64 -d > ${ENTITLEMENT_FILE}
 		sed -i 's/\(conductor_spark .*\)/\n\1/' ${ENTITLEMENT_FILE}
@@ -335,8 +353,8 @@ function deploy_product() {
 		fi
 	done
 	echo "$PRODUCT $VERSION $ROLE ready `date`" >> /root/application-ready
-	LOG "${product} cluster is now ready ..."
-	LOG "generating {product} post configuration activity"
+	LOG "${PRODUCT} cluster is now ready ..."
+	LOG "generating ${PRODUCT} post configuration activity"
 	funcGeneratePost
 }
 ##################END FUNCTIONS RELATED######################

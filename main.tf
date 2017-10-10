@@ -16,22 +16,9 @@ resource "ibm_compute_bare_metal" "masters" {
   hourly_billing    = "${var.hourly_billing_master}"
   network_speed     = "${var.network_speed_master}"
   count             = "${var.master_use_bare_metal ? 1 : 0}"
-  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n"
+  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
-
-  connection {
-    user = "root"
-    private_key = "${var.ssh_private_key}"
-    host = "${self.public_ipv4_address}"
-  }
-  provisioner "file" {
-    source = "scripts/ibm_spectrum_computing_deploy.sh"
-    destination = "/root/ibm_spectrum_computing_deploy.sh"
-  }
-  provisioner "remote-exec" {
-    inline = "echo -e \"numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > /root/user_metadata; bash /root/ibm_spectrum_computing_deploy.sh"
-  }
 }
 
 # Create virtual servers with the SSH key.
@@ -46,7 +33,7 @@ resource "ibm_compute_vm_instance" "masters" {
   cores             = "${var.core_of_master}"
   memory            = "${var.memory_in_mb_master}"
   count             = "${var.master_use_bare_metal ? 0 : 1}"
-  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = false
 }
 
@@ -60,22 +47,9 @@ resource "ibm_compute_bare_metal" "computes" {
   hourly_billing    = "${var.hourly_billing_compute}"
   network_speed     = "${var.network_speed_compute}"
   count             = "${var.number_of_compute_bare_metal}"
-  user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
-
-  connection {
-    user = "root"
-    private_key = "${var.ssh_private_key}"
-    host = "${self.public_ipv4_address}"
-  }
-  provisioner "file" {
-    source = "scripts/ibm_spectrum_computing_deploy.sh"
-    destination = "/root/ibm_spectrum_computing_deploy.sh"
-  }
-  provisioner "remote-exec" {
-    inline = "echo -e \"useintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n\" > /root/user_metadata; bash /root/ibm_spectrum_computing_deploy.sh"
-  }
 }
 
 resource "ibm_compute_vm_instance" "computes" {
@@ -89,7 +63,7 @@ resource "ibm_compute_vm_instance" "computes" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.number_of_compute}"
-  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = "${var.master_use_bare_metal ? false : var.use_intranet}"
 }
 
@@ -104,7 +78,7 @@ resource "ibm_compute_vm_instance" "dehosts" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.product == "symphony" ? var.number_of_dehost : 0}"
-  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symde\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symde\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = false
 }
 
@@ -120,15 +94,8 @@ variable datacenter_bare_metal {
   description = "The datacenter to create baremetal resources in."
 }
 variable entitlement {
-  default = <<EOF
-ego_base   3.6   dd/mm/yyyy   ()   ()   ()   ****************************************
-sym_advanced_edition   7.2   dd/mm/yyyy   ()   ()   ()   ****************************************
-EOF
-  description = "your entitlement file content here"
-}
-variable ssh_private_key {
   default = ""
-  description = "Your private SSH key to remote execute on bare metal cluster nodes."
+  description = "your entitlement file content here"
 }
 variable ssh_public_key {
   description = "Your public SSH key to access your cluster hosts."
@@ -244,4 +211,18 @@ variable hourly_billing_compute {
 variable post_install_script_uri {
   default = "https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/scripts/ibm_spectrum_computing_deploy.sh"
   description = "uri to the deployment script"
+}
+variable uri_file_entitlement {
+  description = "uri of the entitlement file"
+}
+variable uri_package_installer {
+  description = "uri of the main package installer"
+}
+variable uri_package_additional {
+  default = "http://url/to/additional"
+  description = "uri of the additional package installer (symhony developer version / lsf arch 1)"
+}
+variable uri_package_additional2 {
+  default = "http://url/to/additional2"
+  description = "uri of the additional package installer (lsf arch 2)"
 }

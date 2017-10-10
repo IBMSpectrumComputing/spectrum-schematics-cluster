@@ -4,6 +4,19 @@ A High Performance Computing (HPC) for FSS(Financial Services Sector) Tech Previ
 
 This repository can be forked or directly used in IBM Cloud Schematics. You simply update terraform.tfvars to provide your software entitlement and/or sensitive info (ssh publickey, bluemix api key, softlayer username and api key, for security concern, you should use Schematics GUI for them), you can also fine control with other terraform variables.
 
+**IMPORTANT**
+
+Due to legal requirement, we can not provide product packages and entitlement here. You need to provide your own packages and entitlement or you can get the evaluation packages and entitlements from [IBM developerworks] (https://www.ibm.com/developerworks/community/blogs/46ecec34-bd69-43f7-a627-7c469c1eddf8/entry/IBM_Spectrum_Symphony_releases_version_7_2?lang=en). **variables uri_abc_xyz can be the url of the links inside IBM developerworks**.
+
+The entitlement can be provided by **either** of below:
+- entitlement (string value, paste entitlement content)
+- uri_file_entitlement (the url that is publicly available, an example is the url when you request evaluation on developerworks)
+
+The packages can be provided by combination of below:
+- uri_package_installer (required, the url that is publicly available, an example is the url when you request evaluation on developerworks)
+- uri_package_additional (optinoal for cws, required for symphony developer edition, required for lsf. the url that is publicly available, an example is the url when you request evaluation on developerworks point to symphony developer edition or lsf arch linux2.6-glibc2.3-x86_64)
+- uri_package_additonal2 (optional for cws and symhony, required for lsf. the url that is publicly available, an example is the url when you request evaluation on developerworks point to lsf arch lnx310-lib217-x86_64)
+
 ## Release Information
 
 * IBM Spectrum Symphony/CWS/LSF Cluster on Schematics
@@ -47,9 +60,18 @@ To use IBM schematics or Terraform with IBM Cloud Provider, you need to gain cer
 - **ssh_public_key**
   - your personal ssh public key to access servers on softlayer
   - you need to have "manage sshkey" capability on softlayer
-- **entitlement**
+- **entitlement** or **uri_file_entitlement**
   - entitlement that enables use of the cluster software
-  - you can obtain a trial entitlement if you do not have one
+  - you can obtain a trial entitlement from developerworks if you do not have one
+- **uri_package_installer**
+  - primary installer that launches Spectrum Computing cluster software
+  - you can obtain the trial copy from developerworks if you do not have one
+- uri_package_additional
+  - secondary installer that is used for Spectrum Computing symphony de or lsf arch linux2.6-glibc2.3-x86_64(centos7)
+  - you can obtain the trial copy from developerworks if you do not have one
+- uri_package_additional2
+  - additional installer that is used for Spectrum Computing lsf arch lnx310-glibc217-x86_64 (ubuntu1604)
+  - you can obtain the trial copy from developerworks if you do not have one
 
 ## Usage
 
@@ -58,7 +80,7 @@ To use IBM schematics or Terraform with IBM Cloud Provider, you need to gain cer
 Follow the instructions on the [Getting Started with IBM Cloud Schematics](https://console.ng.bluemix.net/docs/services/schematics/index.html#gettingstarted) documentation page.
 
 ### Usage with Terraform Binary on your local workstation
-You will need to [setup up IBM Cloud provider credentials](#setting-up-provider-credentials) on your local machine. Then you will need the [Terraform binary](https://www.terraform.io/intro/getting-started/install.html) and the [IBM Cloud Provider Plugin](https://github.com/IBM-Bluemix/terraform/releases). Then follow the instructions at [https://ibm-bluemix.github.io/tf-ibm-docs/v0.4.0/#developing-locally](https://ibm-bluemix.github.io/tf-ibm-docs/v0.4.0/#developing-locally).
+You will need to [setup up IBM Cloud provider credentials](#setting-up-provider-credentials) on your local machine. Then you will need the [Terraform binary](https://www.terraform.io/intro/getting-started/install.html) and the [IBM Cloud Provider Plugin](https://github.com/IBM-Bluemix/terraform-provider-ibm). Then follow the instructions at [https://ibm-bluemix.github.io/tf-ibm-docs/v0.5.0/#developing-locally](https://ibm-bluemix.github.io/tf-ibm-docs/v0.5.0/#developing-locally).
 
 To run this project locally execute the following steps:
 
@@ -134,7 +156,6 @@ To run this project locally execute the following steps:
 |use_intranet|cluster communicate via intranet connection|true|
 |datacenter_bare_metal|data center to create bare metal nodes in|wdc04|
 |master_use_bare_metal|whether create bare metal for cluster masters|false|
-|**ssh_private_key**|ssh fingerprint for provisioners on bare metal cluster nodes(multiline)||
 |fixed_config_preset|bare metal hardware configurations|S1270_32GB_2X960GBSSD_NORAID|
 |os_refrence_bare_metal|operating system code to deploy on bare metal|UBUNTU_16_64|
 |prefix_compute_bare_metal|hostname prefix for compute nodes|bmcompute|
@@ -144,6 +165,11 @@ To run this project locally execute the following steps:
 
 ## Release Notes
 
+### version 0.5.0
+
+- add option to create and specify private vlan for vm instances
+- ssh_private_key no longer needed for bare metal deployment
+
 ### version 0.4
 
 - Boost version to 0.4 to catchup provider version
@@ -152,7 +178,6 @@ To run this project locally execute the following steps:
 - Bare metal support (experimental)
   - **never create bare metals with the same hostname and domainname in the same day even after destroy**
   - bare metal creation require to specify datacenter and preset fixed config, no guarranty of availability
-  - **ssh_private_key**
   - **master_use_bare_metal** or **number_of_compute_bare_metal**
 
 ### Release initial
@@ -175,14 +200,11 @@ To run this project locally execute the following steps:
 
 **Recommend to use standalone ibm-cloud-provider and terraform to deploy bare metal**
 
-Due to the current limit of schematics, bare metal needs to use remote-exec provisioner and in turn requires to provide your ssh private key. To provide private key, you need fork the repository and update terraform.tfvars, there is security concern. This can be solved when next release of ibm-cloud-provider is deployed on schematics.
-
 Since datacenter and fixed_config_preset has to be specified and there is no good way to make sure the selection can be satisfied, you may need to try several times. "D2620V4_128GB_2X800GB_SSD_RAID_1_K80_GPU2" is good GPU preset
 
 - master_use_bare_metal = true will create masters as bare metal servers
 - datacenter_bare_metal is the datacenter where to deploy bare metal servers
 - os_reference_bare_metal is the operating system to deploy on bare metal servers
-- **ssh_privte_key** is required for bare metal so far, specify it in terraform.tfvars
 
 ## Available Data Centers
 Any of these values is valid for use with the `datacenter` variable:

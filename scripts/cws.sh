@@ -81,8 +81,10 @@ function update_profile_d()
 	then
 		if [ "${ROLE}" == "master" -o "${ROLE}" == 'compute' ]
 		then
-			echo "[ -f /opt/ibm/spectrumcomputing/profile.platform ] && source /opt/ibm/spectrumcomputing/profile.platform" > /etc/profile.d/symphony.sh
-			echo "[ -f /opt/ibm/spectrumcomputing/cshrc.platform ] && source /opt/ibm/spectrumcomputing/cshrc.platform" > /etc/profile.d/symphony.csh
+			echo "[ -f /opt/ibm/spectrumcomputing/profile.platform ] && source /opt/ibm/spectrumcomputing/profile.platform" > /etc/profile.d/spectrumcomputing.sh
+			echo "[ -f /opt/lsf/conf/profile.lsf ] && source /opt/lsf/conf/profile.lsf" >> /etc/profile.d/spectrumcomputing.sh
+			echo "[ -f /opt/ibm/spectrumcomputing/cshrc.platform ] && source /opt/ibm/spectrumcomputing/cshrc.platform" > /etc/profile.d/spectrumcomputing.csh
+			echo "[ -f /opt/lsf/conf/cshrc.lsf ] && source /opt/lsf/conf/cshrc.lsf" >> /etc/profile.d/spectrumcomputing.csh
 		elif [ "${ROLE}" == "symde" ]
 		then
 			echo "[ -f /opt/ibm/spectrumcomputing/symphonyde/de72/profile.platform ] && source /opt/ibm/spectrumcomputing/symphonyde/de72/profile.platform" > /etc/profile.d/symphony.sh
@@ -141,16 +143,16 @@ function download_packages()
 			fi
 			if [ "$ROLE" == 'master' ]
 			then
-				LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/cws/${VERSION}/cws-${ver_in_pkg}_x86_64.bin"
-				cd /export/cws/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/cws/${VERSION}/cws-${ver_in_pkg}_x86_64.bin
+				LOG "\twget -nH -c --no-check-certificate -o /dev/null -O cws-${ver_in_pkg}_x86_64.bin ${uri_package_installer}"
+				cd /export/cws/${VERSION} && wget -nH -c --no-check-certificate -o /dev/null -O cws-${ver_in_pkg}_x86_64.bin ${uri_package_installer}
 				touch /export/download_finished
 			else
 				if [ "$useintranet" == 'false' ]
 				then
 					if [ "${ROLE}" == "compute" ]
 					then
-						LOG "\twget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/cws/${VERSION}/cws-${ver_in_pkg}_x86_64.bin"
-						cd /export/cws/${VERSION} && wget -nH -c --limit-rate=10m --no-check-certificate -o /dev/null http://158.85.106.44/export/cws/${VERSION}/cws-${ver_in_pkg}_x86_64.bin
+						LOG "\twget -nH -c --no-check-certificate -o /dev/null -O cws-${ver_in_pkg}_x86_64.bin ${uri_package_installer}"
+						cd /export/cws/${VERSION} && wget -nH -c --no-check-certificate -o /dev/null -O cws-${ver_in_pkg}_x86_64.bin ${uri_package_installer}
 						touch /export/download_finished
 					else
 						echo "no download"
@@ -167,7 +169,10 @@ function generate_entitlement()
 {
 	if [ "$PRODUCT" == "cws" ]
 	then
-		if [ -n "$entitlement" ]
+		if [ -n "${uri_file_entitlement}" ]
+		then
+			wget -nH -c --no-check-certificate -O ${ENTITLEMENT_FILE} ${uri_file_entitlement}
+		elif [ -n "$entitlement" ]
 		then
 			echo $entitlement | base64 -d > ${ENTITLEMENT_FILE}
 			sed -i 's/\(conductor_spark .*\)/\n\1/' ${ENTITLEMENT_FILE}
