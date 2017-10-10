@@ -1,6 +1,6 @@
 terraform.tfstate
 terraform.tfstate.backup
-terraform.tfvars.local
+terraform.tfvars*
 .terraform.tfstate.lock.info
 files
 **/.terraform

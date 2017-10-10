@@ -1,24 +1,7 @@
-##############################################################################
-# Require terraform 0.9.3 or greater
-##############################################################################
-terraform {
-  required_version = ">= 0.9.3"
-}
-##############################################################################
-# IBM Cloud Provider
-##############################################################################
-# See the README for details on ways to supply these values
-# Configure the IBM Cloud Provider
-provider "ibm" {
-  bluemix_api_key    = "${var.ibm_bmx_api_key}"
-  softlayer_username = "${var.ibm_sl_username}"
-  softlayer_api_key  = "${var.ibm_sl_api_key}"
-}
-
 # Create an SSH key. The SSH key surfaces in the SoftLayer console under Devices > Manage > SSH Keys.
 resource "ibm_compute_ssh_key" "ssh_compute_key" {
-  label      = "${var.ssh_key_label}_${var.ibm_sl_username}"
-  notes      = "${var.ssh_key_note} ${var.ibm_sl_username}"
+  label      = "${var.ssh_key_label}_${var.softlayer_username}"
+  notes      = "${var.ssh_key_note} ${var.softlayer_username}"
   public_key = "${var.ssh_public_key}"
 }
 
@@ -128,15 +111,6 @@ resource "ibm_compute_vm_instance" "dehosts" {
 ##############################################################################
 # Variables
 ##############################################################################
-variable ibm_bmx_api_key {
-  description = "Your Bluemix API Key."
-}
-variable ibm_sl_username {
-  description = "Your Softlayer username."
-}
-variable ibm_sl_api_key {
-  description = "Your Softlayer API Key."
-}
 variable datacenter {
   default = "dal12"
   description = "The datacenter to create resources in."
@@ -270,17 +244,4 @@ variable hourly_billing_compute {
 variable post_install_script_uri {
   default = "https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/scripts/ibm_spectrum_computing_deploy.sh"
   description = "uri to the deployment script"
-}
-
-##############################################################################
-# Outputs
-##############################################################################
-output "cluster_master_ip" {
-  value = "${element(compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)),0)}"
-}
-output "symphony_dehost_ip" {
-  value = "${join(" ", ibm_compute_vm_instance.dehosts.*.ipv4_address)}"
-}
-output "cluster_web_interface" {
-  value = "https://${element(compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)),0)}:8443/platform"
 }
