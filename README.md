@@ -1,280 +1,200 @@
 # IBM Spectrum Symphony CWS/LSF Cluster Template
 
-A High Performance Computing (HPC) for FSS(Financial Services Sector) Tech Preview
-
-This repository can be forked or directly used in IBM Cloud Schematics. You simply update terraform.tfvars to provide your software entitlement and/or sensitive info (bluemix api key, softlayer username and softlayer api key, for security concern, you should use Schematics GUI for them), you can also fine control with other terraform variables.
+An [IBM Cloud Schematics](https://console.bluemix.net/docs/services/schematics/index.html) template to launch an HPC (High Performance Computing) cluster for FSS (Financial Services Sector) Tech Preview.
+Schematics uses [Terraform](https://www.terraform.io/) as the infrastructure as code engine. With this template, you can provision and manage infrastructure as a single unit.
+See the [Terraform provider docs](https://ibm-bluemix.github.io/tf-ibm-docs/) for available resource for the IBM cloud.
 
 **IMPORTANT**
 
-Due to legal requirement, we can not provide product packages and entitlement here. You need to provide your own packages and entitlement or you can get the evaluation packages and entitlements from **IBM Website**
-- Evaluation: symphony latest (7.2.0.0): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swerpzsw-symphony-3
+Due to legal requirement, we can not provide product packages and entitlement in this template. You must either provide your own packages and entitlement or get the evaluation packages and entitlements from the following IBM URLs:
+
+Evaluation: Symphony latest (7.2.0.0): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swerpzsw-symphony-3
   - uri_file_entitlement   = "https://......./sym_adv_ev_entitlement.dat"
   - uri_package_installer  = "https://......./symeval-7.2.0.0_x86_64.bin"
   - uri_package_additonal  = "https://......./symdeeval-7.2.0.0_x86_64.bin"
-- Evaluation: cws latest (2.2.0.0): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swg-eipcfs
+
+Evaluation: CWS latest (2.2.0.0): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swg-eipcfs
   - uri_file_entitlement   = "https://......./cwseval_entitlement.dat"
   - uri_package_installer  = "https://......./seval-2.2.0.0_x86_64.bin"
-- Evaluation: lsf latest (10.1): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swerpsysz-lsf-3&S_PKG=lsfv101
-  - uri_file_entitlement   = "" (no evaluation license provided, provide your own)
+
+Evaluation: LSF latest (10.1): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swerpsysz-lsf-3&S_PKG=lsfv101
+  - uri_file_entitlement   = (no evaluation license provided; you must provide your own)
   - uri_package_installer  = "https://......./lsf10.1_lsfinstall_linux_x86_64.tar.Z"
   - uri_package_additional = "https://......./lsf10.1_linux2.6-glibc2.3-x86_64.tar."
-  - uri_package_additional2= "" (no evaluation copy provided, does not support ubuntu 1604)
+  - uri_package_additional2= (no evaluation license provided; does not support Ubuntu 1604)
 
-The entitlement can be provided by **either** of below:
-- entitlement (string value, paste entitlement content)
-- uri_file_entitlement (the url that is publicly available, an example is the url when you request evaluation on developerworks)
+You can provide the package with a combination of the following options:
+- `uri_package_installer` (required) - The primary installer that launches Spectrum Computing cluster software. If you want to use a trial copy, use the above URL to request evaluation packages for the corresponding software.
+- `uri_package_additional` (optional for CWS, required for Symphony Developer Edition, required for LSF) - A secondary installer that is used for Spectrum Computing Symphony Developer Edition or LSF Arch linux2.6-glibc2.3-x86_64 (centos7). If you want to use a trial copy, use the above URL to request evaluation packages for Symphony Developer Edition or LSF Arch linux2.6-glibc2.3-x86_64.
+- `uri_package_additonal2` (optional for CWS and Symphony, required for LSF) - A secondary installer that is used for Spectrum Computing LSF Arch lnx310-glibc217-x86_64 (ubuntu1604). If you want to use a trial copy, use the above URL to request evaluation packages for LSF Arch lnx310-lib217-x86_64.
 
-The packages can be provided by combination of below:
-- uri_package_installer (required, the url that is publicly available, an example is the url when you request evaluation on developerworks)
-- uri_package_additional (optional for cws, required for symphony development host, required for lsf. the url that is publicly available, an example is the url when you request evaluation pointing to symphony developer edition or lsf arch linux2.6-glibc2.3-x86_64)
-- uri_package_additonal2 (optional for cws and symhony, required for lsf to support ubuntu1604. the url that is publicly available, an example is the url when you request evaluation pointing to lsf arch lnx310-lib217-x86_64)
+You can provide the entitlement with one of the following options:
+- `entitlement` - A string value of the pasted entitlement content.
+- `uri_file_entitlement` If you do not have entitlement that enables use of the cluster software, you can use the above URL to request evaluation packages for the corresponding software.
 
-## Release Information
+#### Release Information
 
 * IBM Spectrum Symphony/CWS/LSF Cluster on Schematics
-* Supported Product Version: symphony latest(7.2.0.0), cws latest(2.2.0.0), lsf latest(10.1)
+* Supported Product Version: Symphony latest (7.2.0.0), CWS latest (2.2.0.0), LSF latest (10.1)
 
 ## Contents
 
 * Default Topology
-* Introduction
 * Usage
-* Release Notes
 * Advanced Usage
-* Available Datacenters
 * Community Contribution
+* Release Notes
 * Copyright
- 
-## Default Topoloty
 
-### default symphony cluster
+## Default Topology
+
+Review the following diagrams for the topology of default symphony, cws, and lsf clusters.
+
+### Default Symphony cluster
 
 ![default installation topology](https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/images/symdefault.png)
 
-### default cws cluster
+### Default CWS cluster
 
 ![default installation topology](https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/images/cwsdefault.png)
 
-### default lsf cluster
+### Default LSF cluster
 
 ![default installation topology](https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/images/lsfdefault.png)
 
-## Introduction
-
-To use IBM schematics or Terraform with IBM Cloud Provider, you need to gain certain information, here is the most important ones
-
-- **ibm_bmx_api_key**
-  - your api key for IBM Bluemix
-  - If you do not have an existing API key, you can generate the value by running bluemix iam api-key-create NAME
-- **ibm_sl_username** and **ibm_sl_api_key**
-  - your username and api key for SoftLayer
-  - You can retrieve the value from the "SoftLayer Customer Portal", "account" -> "User"
-- **ssh_public_key**
-  - your personal ssh public key to access servers on softlayer
-  - you need to have "manage sshkey" capability on softlayer
-- **entitlement** or **uri_file_entitlement**
-  - entitlement that enables use of the cluster software
-  - you can obtain a trial entitlement from developerworks if you do not have one
-- **uri_package_installer**
-  - primary installer that launches Spectrum Computing cluster software
-  - you can obtain the trial copy from developerworks if you do not have one
-- uri_package_additional
-  - secondary installer that is used for Spectrum Computing symphony de or lsf arch linux2.6-glibc2.3-x86_64(centos7)
-  - you can obtain the trial copy from developerworks if you do not have one
-- uri_package_additional2
-  - additional installer that is used for Spectrum Computing lsf arch lnx310-glibc217-x86_64 (ubuntu1604)
-  - you can obtain the trial copy from developerworks if you do not have one
-
 ## Usage
 
-### Usage with Terraform Binary on your local workstation
-You will need to [setup up IBM Cloud provider credentials](#setting-up-provider-credentials) on your local machine. Then you will need the [Terraform binary](https://www.terraform.io/intro/getting-started/install.html) and the [IBM Cloud Provider Plugin](https://github.com/IBM-Bluemix/terraform-provider-ibm). Then follow the instructions at [https://ibm-bluemix.github.io/tf-ibm-docs/v0.5.0/#developing-locally](https://ibm-bluemix.github.io/tf-ibm-docs/v0.5.0/#developing-locally).
+### Create an environment with IBM Cloud Schematics
+Environments can be used to separate software components into development tiers (e.g. staging, QA, and production).
+1. In Bluemix, go to the menu and select the [Schematics dashboard](https://console.bluemix.net/schematics).
+2. In the left navigation menu, select **Templates** to access the template catalog.
+3. Click **Create** on the hpc-fss-cluster template. You are taken to a configuration page where you can define metadata about your environment.
+4. Define values for your variables according to the following table.
 
-To run this project locally execute the following steps:
+### Create an environment with Terraform Binary on your local workstation
+1. [Set up IBM Cloud provider credentials](#setting-up-provider-credentials) on your local machine.
+2. Install the [Terraform binary](https://www.terraform.io/intro/getting-started/install.html)
+3. Install the [IBM Cloud Provider Plugin](https://github.com/IBM-Bluemix/terraform-provider-ibm).
+4. Follow the instructions at the [IBM Cloud Provider for Terraform docs](https://ibm-bluemix.github.io/tf-ibm-docs/index.html).
 
-- Supply required variable values in `terraform.tfvars`, see https://www.terraform.io/intro/getting-started/variables.html#from-a-file for instructions.
-  - Alternatively these values can be supplied via the command line or environment variables, see https://www.terraform.io/intro/getting-started/variables.html.
-- `terraform plan`: this will perform a dry run to show what infrastructure terraform intends to create
-- `terraform apply`: this will create actual infrastructure
-  - Infrastructure can be seen in IBM Bluemix under the following URLs:
-    - https://control.bluemix.net/devices
-- `terraform destroy`: this will destroy all infrastructure which has been created
+To run this project locally:
 
-### Usage with IBM Cloud Schematics
+1. Supply the required variable values in one of the following ways:
+    * via the [command line](https://www.terraform.io/intro/getting-started/variables.html#command-line-flags)
+    * in a [`terraform.tfvars` file](https://www.terraform.io/intro/getting-started/variables.html#from-a-file)
+    * via [environment variables](https://www.terraform.io/intro/getting-started/variables.html#from-environment-variables)
+2. Run `terraform plan`. Terraform performs a dry run to show what resources will be created.
+3. Run `terraform apply`. Terraform creates and deploys resources to your environment.
+    * You can see deployed infrastructure in IBM Bluemix [here](https://control.bluemix.net/devices).
+4. Run `terraform destroy`. Terraform destroys all deployed resources in this environment.
 
-Follow the instructions on the [Getting Started with IBM Cloud Schematics](https://console.ng.bluemix.net/docs/services/schematics/index.html#gettingstarted) documentation page.
-
-
-#### steps
-
-- login to IBM bluemix, navigate to Schematics
-- create new environment
-  - Source Control URL: use your forked repository url
-  - Variables (required)
-    - **bluemix_api_key**
-    - **softlayer_username**, **softlayer_api_key**
-    - **ssh_public_key**
-    - **entitlement** or **uri_file_entitlement**
-    - **uri_package_installer**
-  - Variables (optional)
-    - product = symphony|cws|lsf to create deferrent clusters, default to symphony
-    - uri_package_additional
-    - uri_package_additional2
-    - refer to the file main.tf for full variable list
-- plan and view plan log
-- apply and view apply log
-- attention
-  - this assumes that the cluster will be created in the same private vlan
-  - if for any reason it is not this case, the cluster deployment might fail, you can shrink/destroy and apply again
-- (optional) to gain more control of the cluster
-  - use softlayer web GUI
-  - use bluemix cli
-    - bluemix sl vs list
-  - login to softlayer resource directly 
-    - tail -f /root/log_deploy_product
-- normally you should wait 10 minutes before accessing the web GUI
-
-### all variables
+### Variables
 |Variable Name|Description|Default Value|
 |-------------|-----------|-------------|
-|**bluemix_api_key**|bluemix api key||
-|**softlayer_username**|softlayer username||
-|**softlayer_api_key**|softlayer api key||
-|datacenter|data center to create vm nodes in|dal12|
-|hourly_billing_master|bill on hourly usage for master nodes|true|
-|hourly_billing_compute|bill on hourly usage for compute nodes|true|
-||||
-|**ssh_public_key**|ssh fingerprint to access cluster nodes||
-|ssh_key_label|label for your ssh public key|ssh_compute_key|
-|ssh_key_note|description for your ssh public key|ssh key for cluster hosts|
-||||
-|**entitlement**|entitlement content to use the product||
-|**uri_file_entitlement**|publically available link to the entitlement file||
-|**uri_package_installer**|publically available link to the product installation file||
-|uri_package_additional|publically available link to the product supplement file||
-|uri_package_additional2|publically available link to the extra product supplement file||
-|product|cluster product to deploy: [symphony, cws, lsf]|symphony|
-|version|version of the cluster product: [latest, 7.2.0.0, 2.2.0.0, 10.1]|latest|
-|cluster_admin|admin account of the cluster: [egoadmin, lsfadmin]|egoadmin|
-|cluster_name|name of the cluster|mycluster|
-||||
-|os_refrence|operating system code to deploy: [CENTOS_7_64, UBUNTU_16_64]|CENTOS_7_64|
-|domain_name|dns domain name to use|domain.com|
-|prefix_master|hostname prefix for master nodes|master|
-|prefix_compute|hostname prefix for compute nodes|compute|
-|prefix_dehost|hostname prefix for symhony development nodes|dehost|
-|number_of_compute|number of vm compute nodes|2|
-|number_of_dehost|number of development nodes|1|
-|network_speed_master|network interface speed for master nodes|1000|
-|network_speed_compute|network interface speed for compute nodes|1000|
-|core_of_master|cpu cores for master nodes|2|
-|core_of_compute|cpu cores for compute nodes|1|
-|memory_in_mb_master|memory for master nodes|8192|
-|memory_in_mb_compute|memory for compute nodes|4096|
-||||
-|master_failover|enable HA for masters or not|false|
-|use_intranet|cluster communicate via intranet connection|true|
-|datacenter_bare_metal|data center to create bare metal nodes in|wdc04|
-|master_use_bare_metal|whether create bare metal for cluster masters|false|
-|fixed_config_preset|bare metal hardware configurations|S1270_32GB_2X960GBSSD_NORAID|
-|os_refrence_bare_metal|operating system code to deploy on bare metal|UBUNTU_16_64|
-|prefix_compute_bare_metal|hostname prefix for compute nodes|bmcompute|
-|number_of_compute_bare_metal|number of bare metal compute nodes|0|
-
-- please refer to terraform.tfvars and/or main.tf
-
-## Release Notes
-
-### version 0.5.0
-
-- ssh_private_key no longer needed for bare metal deployment
-- add paramters for evaluation clusters:
-  - uri_file_entitlement
-  - uri_package_installer
-  - uri_package_additonal
-  - uri_package_additional2
-
-### version 0.4
-
-- Boost version to 0.4 to catchup provider version
-- Support **symphony**, **cws** and **lsf deployment**
-- Support both **CENTOS_7_64** and **UBUNTU_16_64**
-- Bare metal support (experimental)
-  - **never create bare metals with the same hostname and domainname in the same day even after destroy**
-  - bare metal creation require to specify datacenter and preset fixed config, no guarranty of availability
-  - **master_use_bare_metal** or **number_of_compute_bare_metal**
+|bluemix_api_key|Your Bluemix API key. You can get the value by running `bx iam api-key-create <key name>``.||
+|cluster_admin|The administrator account of the cluster: `egoadmin` or `lsfadmin`.|egoadmin|
+|cluster_name|The name of the cluster.|mycluster|
+|core_of_compute|The number of CPU cores to allocate to the compute server.|1|
+|core_of_master|The number of CPU cores to allocate to the master server.|2|
+|datacenter_bare_metal|The data center to create bare metal resources in. You can get the list by running `bluemix cs locations`.|wdc04|
+|datacenter|The data center to create resources in. You can get the list by running `bluemix cs locations`.|dal12|
+|domain_name|The name of the domain for the instance.|domain.com|
+|entitlement|Entitlement content that enables use of the cluster software.||
+|fixed_config_preset|The bare metal hardware configuration.|S1270_32GB_2X960GBSSD_NORAID|
+|hourly_billing_compute|The billing type for the instance. When set to true, the computing instance is billed on hourly usage. Otherwise, the instance is billed on a monthly basis.|true|
+|hourly_billing_master|The billing type for the instance. When set to true, the master node is billed on hourly usage. Otherwise, the instance is billed on a monthly basis.|true|
+|master_failover|Specifies whether or not HA is enabled for master nodes.|false|
+|master_use_bare_metal|If set to `true`, bare metal masters are created. If set to `false`, VM masters are created.|false|
+|memory_in_mb_compute|The amount of memory (in Mb) to allocate to the compute server.|4096|
+|memory_in_mb_master|The amount of memory (in Mb) to allocate to the master server.|8192|
+|network_speed_compute|The network interface speed for the compute nodes.|1000|
+|network_speed_master|The network interface speed for the master nodes.|1000|
+|number_of_compute_bare_metal|The number of bare metal compute nodes to deploy.|0|
+|number_of_compute|The number of VM compute nodes to deploy.|2|
+|number_of_dehost|The number of development nodes to depoy.|1|
+|os_reference_bare_metal|An operating system reference code that is used to provision the bare metal server.|UBUNTU_16_64|
+|os_reference|An operating system reference code that is used to provision the cluster nodes. Get a complete list of the OS reference codes available (use your API key as the password to log in).|CENTOS_7_64|
+|post_install_script_uri|The URI for the deployment script.|https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/scripts/ibm_spectrum_computing_deploy.sh|
+|prefix_compute_bare_metal|The hostname prefix for bare metal compute nodes.|bmcompute|
+|prefix_compute|The hostname prefix for compute nodes.|compute|
+|prefix_dehost|The hostname prefix for Symphony development nodes.|dehost|
+|prefix_master|The hostname prefix for the master server.|master|
+|product|The cluster product to deploy: `symphony`, `cws`, or `lsf`.|symphony|
+|softlayer_api_key|Your Bluemix Infrastructure (SoftLayer) API key.||
+|softlayer_username|Your Bluemix Infrastructure (SoftLayer) user name.||
+|ssh_key_label|An identifying label to assign to the SSH key.|ssh_compute_key|
+|ssh_key_note|A description to assign to the SSH key.|ssh key for cluster hosts|
+|ssh_public_key|The public key contents for the SSH keypair to access cluster nodes.||
+|uri_file_entitlement|The URL to the entitlement file for the software product.||
+|uri_package_additional|The URL to the product package supplement file.||
+|uri_package_additional2|The URL to an additional product package supplement file.||
+|uri_package_installer|The URL to the product package installation file.||
+|use_intranet|Specifies whether the cluster resolves hostnames with intranet or internet IP addresses.|true|
+|version|The version of the cluster product: `latest`, `7.2.0.0`, `2.2.0.0`, or `10.1`.|latest|
 
 ## Advanced Usage
 
-### use internet interface for cluster communication
+### Bare metal support
 
-- set use_intranet = false will force clusters to communicate via internet link
+Use standalone ibm-cloud-provider and Terraform to deploy bare metal servers. Since `datacenter` and `fixed_config_preset` must be specified and there is no guarantee of availability, you may need to try several different values.
 
-### bare metal support
+You can use `D2620V4_128GB_2X800GB_SSD_RAID_1_K80_GPU2` as a GPU preset.
 
-Since datacenter and fixed_config_preset has to be specified and there is no good way to make sure the selection can be satisfied, you may need to try several times. "D2620V4_128GB_2X800GB_SSD_RAID_1_K80_GPU2" is good GPU preset
-
-- master_use_bare_metal = true will create masters as bare metal servers
-- number_of_compute_bare_metal is the quantity of bare metal compute nodes
-- datacenter_bare_metal is the datacenter where to deploy bare metal servers
-- os_reference_bare_metal is the operating system to deploy on bare metal servers
-
-## Available Data Centers
-Any of these values is valid for use with the `datacenter` variable:
-- `ams01`: Amsterdam 1
-- `ams03`: Amsterdam 3
-- `che01`: Chennai 1
-- `dal01`: Dallas 1
-- `dal10`: Dallas 10
-- `dal12`: Dallas 12
-- `dal02`: Dallas 2
-- `dal05`: Dallas 5
-- `dal06`: Dallas 6
-- `dal07`: Dallas 7
-- `dal09`: Dallas 9
-- `fra02`: Frankfurt 2
-- `hkg02`: Hong Kong 2
-- `hou02`: Houston 2
-- `lon02`: London 2
-- `mel01`: Melbourne 1
-- `mex01`: Mexico 1
-- `mil01`: Milan 1
-- `mon01`: Montreal 1
-- `osl01`: Oslo 1
-- `par01`: Paris 1
-- `sjc01`: San Jose 1
-- `sjc03`: San Jose 3
-- `sao01`: Sao Paulo 1
-- `sea01`: Seattle 1
-- `seo01`: Seoul 1
-- `sng01`: Singapore 1
-- `syd01`: Sydney 1
-- `syd04`: Sydney 4
-- `tok02`: Tokyo 2
-- `tor01`: Toronto 1
-- `wdc01`: Washington 1
-- `wdc04`: Washington 4
+When deploying bare metal servers, these variables can be especially useful:
+- master_use_bare_metal - If set to `true`, bare metal masters are created. If set to `false`, VM masters are created.
+- number_of_compute_bare_metal - The number of bare metal compute nodes to deploy.
+- datacenter_bare_metal - The data center to create resources in. You can get the list by running `bluemix cs locations`.
+- os_reference_bare_metal - An operating system reference code that is used to provision the bare metal server.
 
 ## Community Contribution Requirements
 
-Community contributions to this repository must follow the [IBM Developer's Certificate of Origin (DCO)](https://github.com/IBMSpectrumComputing/spectrum-schematics-cluster/blob/master/IBMDCO.md) process and only through GitHub Pull Requests:
+Community contributions to this repository must follow the [IBM Developer's Certificate of Origin (DCO)](https://github.com/IBMSpectrumComputing/spectrum-schematics-cluster/blob/master/IBMDCO.md) process. Contributions can only through GitHub pull requests:
 
- 1. Contributor proposes new code to community.
+ 1. Contributor proposes new code to community through a pull request.
 
- 2. Contributor signs off on contributions 
-    (i.e. attachs the DCO to ensure contributor is either the code 
-    originator or has rights to publish. The template of the DCO is included in
-    this package).
- 
- 3. IBM SpectrumComputing reviews contribution to check for:
-    i)  Applicability and relevancy of functional content 
+ 2. Contributor signs off on contributions by attaching the DCO to ensure contributor is either the code originator or has rights to publish. The template of the DCO is included in this package.
+
+ 3. IBM SpectrumComputing reviews the contribution to check for:
+    i)  Applicability and relevancy of functional content
     ii) Any obvious issues
 
- 4. If accepted, posts contribution. If rejected, work goes back to contributor and is not merged.
+ 4. If accepted, the contribution is merged. If rejected, the contribution goes back to contributor and is not merged.
+
+ ## Release Notes
+
+ ### version 0.5.0
+
+ - add option to create and specify private vlan for vm instances
+ - ssh_private_key no longer needed for bare metal deployment
+ - add paramters for evaluation clusters:
+ - uri_file_entitlement
+ - uri_package_installer
+ - uri_package_additonal
+ - uri_package_additional2
+
+ ### version 0.4
+
+ - Boost version to 0.4 to catchup provider version
+ - Support **symphony**, **cws** and **lsf deployment**
+ - Support both **CENTOS_7_64** and **UBUNTU_16_64**
+ - Bare metal support (experimental)
+   - **never create bare metals with the same hostname and domainname in the same day even after destroy**
+   - bare metal creation require to specify datacenter and preset fixed config, no guarantee of availability
+   - **master_use_bare_metal** or **number_of_compute_bare_metal**
+
+ ### Release initial
+
+ - This is the first release from IBM Spectrum Computing.
+ - Create centos based symphony 7.2.0.0 virtual machines on SoftLayer using Schematics.
+ - Required variables
+   - **entitlement**
+   - **ibm_bmx_api_key**
+   - **ibm_sl_username**, **ibm_sl_api_key**
+   - **ssh_public_key**
 
 ## Copyright
 
-### EPL v1.0 
+### EPL v1.0
 
     Eclipse Public License - v 1.0
 
@@ -498,4 +418,3 @@ intellectual property laws of the United States of America. No party to
 this Agreement will bring a legal action under this Agreement more than
 one year after the cause of action arose. Each party waives its rights
 to a jury trial in any resulting litigation.
-
