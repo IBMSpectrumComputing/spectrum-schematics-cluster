@@ -19,10 +19,8 @@ variable bluemix_api_key {
   description = "Your Bluemix API Key."
 }
 variable softlayer_username {
-  description = "Your Softlayer username."
+  description = "Your Bluemix Infrastructure (SoftLayer) user name."
 }
 variable softlayer_api_key {
-  description = "Your Softlayer API Key."
+  description = "Your Bluemix Infrastructure (SoftLayer) API key."
 }
-
-
