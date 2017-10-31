@@ -114,6 +114,10 @@ function os_config()
 		rm -f /bin/sh
 		cp /bin/bash /bin/sh
 	fi
+	if [ -f /etc/cloud/cloud.cfg ]
+	then
+		sed -i 's/\(.*\)update_etc_hosts/#\1update_etc_hosts/' /etc/cloud/cloud.cfg
+	fi
 }
 
 function funcGetPrivateIp()
