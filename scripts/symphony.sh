@@ -122,7 +122,7 @@ function app_depend()
 			fi
 			if [ "${ROLE}" == 'symde' ]
 			then
-				LOG "\tapt-get -y install tigervnc-server xterm firefox"
+				LOG "\tapt-get -y install vnc4server twm xterm firefox"
 				apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages vnc4server twm xterm firefox
 			fi
 		else
