@@ -85,28 +85,22 @@ resource "ibm_compute_vm_instance" "dehosts" {
 ##############################################################################
 # Variables
 ##############################################################################
-variable datacenter {
-  default = "dal12"
-  description = "The datacenter to create resources in."
+variable uri_file_entitlement {
+  description = "The URL to the entitlement file for the software product."
 }
-variable datacenter_bare_metal {
-  default = "tor01"
-  description = "The datacenter to create bare metal resources in."
-}
-variable entitlement {
-  default = ""
-  description = "Entitlement content that enables use of the cluster software."
+variable uri_package_installer {
+  description = "The URL to the product package installation file."
 }
 variable ssh_public_key {
   description = "The public key contents for the SSH keypair to access cluster nodes."
 }
-variable ssh_key_label {
-  default = "ssh_compute_key"
-  description = "An identifying label to assign to the SSH key."
+variable uri_package_additional {
+  default = "http://url/to/additional"
+  description = "The URL to the product package supplement file."
 }
-variable ssh_key_note {
-  default = "ssh key for cluster hosts"
-  description = "A description to assign to the SSH key."
+variable uri_package_additional2 {
+  default = "http://url/to/additional2"
+  description = "The URL to an additional product package supplement file."
 }
 variable product {
   default = "symphony"
@@ -115,6 +109,34 @@ variable product {
 variable version {
   default = "latest"
   description = "The version of the cluster product: `latest`, `7.2.0.0`, `2.2.0.0`, or `10.1`."
+}
+variable entitlement {
+  default = "paste your entitlement content if uri_file_entitlement is not set"
+  description = "Entitlement content that enables use of the cluster software."
+}
+variable os_reference {
+  default = "CENTOS_7_64"
+  description = "An operating system reference code that is used to provision the cluster nodes."
+}
+variable number_of_compute {
+  default = 2
+  description = "The number of VM compute nodes to deploy."
+}
+variable number_of_dehost {
+  default = 1
+  description = "The number of development nodes to depoy."
+}
+variable datacenter {
+  default = "dal12"
+  description = "The datacenter to create resources in."
+}
+variable ssh_key_label {
+  default = "ssh_compute_key"
+  description = "An identifying label to assign to the SSH key."
+}
+variable ssh_key_note {
+  default = "ssh key for cluster hosts"
+  description = "A description to assign to the SSH key."
 }
 variable cluster_admin {
   default = "egoadmin"
@@ -136,25 +158,9 @@ variable prefix_compute {
   default = "compute"
   description = "The hostname prefix for compute nodes."
 }
-variable prefix_compute_bare_metal {
-  default = "bmcompute"
-  description = "The hostname prefix for bare metal compute nodes."
-}
 variable prefix_dehost {
   default = "dehost"
   description = "The hostname prefix for Symphony development nodes."
-}
-variable number_of_compute {
-  default = 2
-  description = "The number of VM compute nodes to deploy."
-}
-variable number_of_compute_bare_metal {
-  default = 0
-  description = "The number of bare metal compute nodes to deploy"
-}
-variable number_of_dehost {
-  default = 1
-  description = "The number of development nodes to depoy."
 }
 variable network_speed_master {
   default = 1000
@@ -180,9 +186,25 @@ variable memory_in_mb_compute {
   default = 4096
   description = "The amount of memory (in Mb) to allocate to the compute server."
 }
-variable os_reference {
-  default = "CENTOS_7_64"
-  description = "An operating system reference code that is used to provision the cluster nodes."
+variable hourly_billing_master {
+  default = "true"
+  description = "When set to true, the master node is billed on hourly usage. Otherwise, the instance is billed on a monthly basis."
+}
+variable hourly_billing_compute {
+  default = "true"
+  description = "When set to true, the computing instance is billed on hourly usage. Otherwise, the instance is billed on a monthly basis."
+}
+variable post_install_script_uri {
+  default = "https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/scripts/ibm_spectrum_computing_deploy.sh"
+  description = "The URL for the deployment script."
+}
+variable use_intranet {
+  default = "true"
+  description = "Specifies whether the cluster resolves hostnames with intranet or internet IP addresses."
+}
+variable datacenter_bare_metal {
+  default = "tor01"
+  description = "The datacenter to create bare metal resources in."
 }
 variable os_reference_bare_metal {
   default = "UBUNTU_16_64"
@@ -196,33 +218,11 @@ variable fixed_config_preset {
   default = "S1270_32GB_2X960GBSSD_NORAID"
   description = "The bare metal hardware configuration."
 }
-variable use_intranet {
-  default = "true"
-  description = "Specifies whether the cluster resolves hostnames with intranet or internet IP addresses."
+variable number_of_compute_bare_metal {
+  default = 0
+  description = "The number of bare metal compute nodes to deploy"
 }
-variable hourly_billing_master {
-  default = "true"
-  description = "When set to true, the master node is billed on hourly usage. Otherwise, the instance is billed on a monthly basis."
-}
-variable hourly_billing_compute {
-  default = "true"
-  description = "When set to true, the computing instance is billed on hourly usage. Otherwise, the instance is billed on a monthly basis."
-}
-variable post_install_script_uri {
-  default = "https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/scripts/ibm_spectrum_computing_deploy.sh"
-  description = "The URL for the deployment script."
-}
-variable uri_file_entitlement {
-  description = "The URL to the entitlement file for the software product."
-}
-variable uri_package_installer {
-  description = "The URL to the product package installation file."
-}
-variable uri_package_additional {
-  default = "http://url/to/additional"
-  description = "The URL to the product package supplement file."
-}
-variable uri_package_additional2 {
-  default = "http://url/to/additional2"
-  description = "The URL to an additional product package supplement file."
+variable prefix_compute_bare_metal {
+  default = "bmcompute"
+  description = "The hostname prefix for bare metal compute nodes."
 }
