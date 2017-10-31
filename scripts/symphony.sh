@@ -106,6 +106,11 @@ function app_depend()
 		then
 			LOG "\tyum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd"
 			yum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd
+			if [ "${ROLE}" == 'symde' ]
+			then
+				LOG "\tyum -y install tigervnc-server xterm firefox"
+				yum -y install tigervnc-server xterm firefox
+			fi
 		elif [ -f /etc/lsb-release ]
 		then
 			LOG "\tapt-get install -y gcc g++ openjdk-8-jdk make"
@@ -115,12 +120,14 @@ function app_depend()
 			else
 				apt-get install -y --force-yes gcc g++ openjdk-7-jdk make
 			fi
+			if [ "${ROLE}" == 'symde' ]
+			then
+				LOG "\tapt-get -y install vnc4server twm xterm firefox"
+				apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages vnc4server twm xterm firefox
+			fi
 		else
 			echo "unknown"
 		fi
-	elif [ "${PRODUCT}" == "lsf" ]
-	then
-		LOG "...handle lsf dependancy"
 	else
 		LOG "...unknown application"
 	fi
@@ -159,6 +166,10 @@ function download_packages()
 						LOG "\twget -nH -c -o /dev/null -O symde-${ver_in_pkg}_x86_64.bin ${uri_package_additional}"
 						cd /export/symphony/${VERSION} && wget -nH -c --no-check-certificate -o /dev/null -O symde-${ver_in_pkg}_x86_64.bin ${uri_package_additional}
 						touch /export/download_finished
+						LOG "\twget -nH -c -o /dev/null -O eclipse.tar.gz http://mirror.csclub.uwaterloo.ca/eclipse/technology/epp/downloads/release/luna/SR2/eclipse-java-luna-SR2-linux-gtk-x86_64.tar.gz"
+						wget -nH -c -o /dev/null -O /export/eclipse.tar.gz http://mirror.csclub.uwaterloo.ca/eclipse/technology/epp/downloads/release/luna/SR2/eclipse-java-luna-SR2-linux-gtk-x86_64.tar.gz
+						touch /export/eclipse && rm -fr /export/eclipse && cd /export && tar xf eclipse.tar.gz
+						cd /usr/bin && ln -sf /export/eclipse/eclipse .
 					else
 						echo "no download"
 					fi
@@ -168,6 +179,10 @@ function download_packages()
 						LOG "\twget -nH -c -O symde-${ver_in_pkg}_x86_64.bin ${uri_package_additional}"
 						cd /export/symphony/${VERSION} && wget -nH -c --no-check-certificate -o /dev/null -O symde-${ver_in_pkg}_x86_64.bin ${uri_package_additional}
 						touch /export/download_finished
+						LOG "\twget -nH -c -o /dev/null -O eclipse.tar.gz http://mirror.csclub.uwaterloo.ca/eclipse/technology/epp/downloads/release/luna/SR2/eclipse-java-luna-SR2-linux-gtk-x86_64.tar.gz"
+						wget -nH -c -o /dev/null -O /export/eclipse.tar.gz http://mirror.csclub.uwaterloo.ca/eclipse/technology/epp/downloads/release/luna/SR2/eclipse-java-luna-SR2-linux-gtk-x86_64.tar.gz
+						touch /export/eclipse && rm -fr /export/eclipse && cd /export && tar xf eclipse.tar.gz
+						cd /usr/bin && ln -sf /export/eclipse/eclipse .
 					fi
 				fi
 			fi
