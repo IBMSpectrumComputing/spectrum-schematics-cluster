@@ -6,31 +6,37 @@ See the [Terraform provider docs](https://ibm-bluemix.github.io/tf-ibm-docs/) fo
 
 **IMPORTANT**
 
-Due to legal requirement, we can not provide product packages and entitlement in this template. You must either provide your own packages and entitlement or get the evaluation packages and entitlements from the following IBM URLs:
+Due to legal requirement, we cannot provide product packages and entitlement in this template. You must either provide your own product packages and entitlement links, or use the IBM Spectrum Cluster evaluation packages and entitlement links from the following IBM URLs, and specify those values in `uri_file_entitlement`, `uri_package_installer`, `uri_package_additional`, `uri_package_additional2` variables in the Variables section of your environment created using the hpc-fss-cluser template. 
 
-Evaluation: Symphony latest (7.2.0.0): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swerpzsw-symphony-3
-  - uri_file_entitlement   = "https://......./sym_adv_ev_entitlement.dat"
-  - uri_package_installer  = "https://......./symeval-7.2.0.0_x86_64.bin"
-  - uri_package_additonal  = "https://......./symdeeval-7.2.0.0_x86_64.bin"
+If you use the evaluation edition, after selecting "I agree" to the license and "Download using http" option, for each files listed below, right click "download now" and specify "Copy Link Address" to copy the download URL and then use that link address in the applicable `uri_` variable field. For example, copy the link address for the IBM Spectrum Symphony evaluation edition entitlement file, and use it as the `uri_file_entitlement` variable value in the environment. Repeat the process for the required evaluation edition packages listed below. The evaluation edition links are unique for each user and are only valid for a few days):
 
-Evaluation: CWS latest (2.2.0.0): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swg-eipcfs
-  - uri_file_entitlement   = "https://......./cwseval_entitlement.dat"
-  - uri_package_installer  = "https://......./seval-2.2.0.0_x86_64.bin"
+If you use IBM Passport Advantage, use the corresponding urls instead. Note that the package name will not have the word "eval".
 
-Evaluation: LSF latest (10.1): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swerpsysz-lsf-3&S_PKG=lsfv101
-  - uri_file_entitlement   = (no evaluation license provided; you must provide your own)
-  - uri_package_installer  = "https://......./lsf10.1_lsfinstall_linux_x86_64.tar.Z"
-  - uri_package_additional = "https://......./lsf10.1_linux2.6-glibc2.3-x86_64.tar."
-  - uri_package_additional2= (no evaluation license provided; does not support Ubuntu 1604)
+If you host your own web or ftp service to provide the packages and entitlement, use the corresponding urls instead.
+ 
+Evaluation: IBM Spectrum Symphony latest (7.2.0.0): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swerpzsw-symphony-3
+  - `uri_file_entitlement`   = "https://......./sym_adv_ev_entitlement.dat"
+  - `uri_package_installer`  = "https://......./symeval-7.2.0.0_x86_64.bin"
+  - `uri_package_additonal`  = "https://......./symdeeval-7.2.0.0_x86_64.bin"
+
+Evaluation: IBM Spectrum CWS latest (2.2.0.0): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swg-eipcfs
+  - `uri_file_entitlement`   = "https://......./cwseval_entitlement.dat"
+  - `uri_package_installer`  = "https://......./cwseval-2.2.0.0_x86_64.bin"
+
+Evaluation: IBM Spectrum LSF latest (10.1): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swerpsysz-lsf-3&S_PKG=lsfv101
+  - `uri_file_entitlement`   = (no evaluation license provided, it is embedded. leave empty for evaluation edition)
+  - `uri_package_installer`  = "https://......./lsf10.1_lsfinstall_linux_x86_64.tar.Z"
+  - `uri_package_additional` = "https://......./lsf10.1_linux2.6-glibc2.3-x86_64.tar."
+  - `uri_package_additional2`= (no package provided; does not support Ubuntu 1604 OS)
 
 You can provide the package with a combination of the following options:
 - `uri_package_installer` (required) - The primary installer that launches Spectrum Computing cluster software. If you want to use a trial copy, use the above URL to request evaluation packages for the corresponding software.
 - `uri_package_additional` (optional for CWS, required for Symphony Developer Edition, required for LSF) - A secondary installer that is used for Spectrum Computing Symphony Developer Edition or LSF Arch linux2.6-glibc2.3-x86_64 (centos7). If you want to use a trial copy, use the above URL to request evaluation packages for Symphony Developer Edition or LSF Arch linux2.6-glibc2.3-x86_64.
 - `uri_package_additonal2` (optional for CWS and Symphony, required for LSF) - A secondary installer that is used for Spectrum Computing LSF Arch lnx310-glibc217-x86_64 (ubuntu1604). If you want to use a trial copy, use the above URL to request evaluation packages for LSF Arch lnx310-lib217-x86_64.
 
-You can provide the entitlement with one of the following options:
-- `entitlement` - A string value of the pasted entitlement content.
-- `uri_file_entitlement` If you do not have entitlement that enables use of the cluster software, you can use the above URL to request evaluation packages for the corresponding software.
+You can provide the entitlement with **either** of the following variables:
+- `uri_file_entitlement` - described above for evaluation entitlement.
+- `entitlement` - A string value of the pasted entitlement content. **If the entitlement contains multiple lines, you can paste line by line, adding `\n` to each line for now**.
 
 #### Release Information
 
