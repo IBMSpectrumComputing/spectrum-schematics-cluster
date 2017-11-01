@@ -55,10 +55,18 @@ while True:
 ENDF
 	chmod +x /etc/udpserver.py
 	nohup python /etc/udpserver.py >> /tmp/udpserver.log 2>&1 &
-	if [ -f /etc/rc.local ]
+	if [ -f /etc/rc.d/rc.local ]
+	then
+		sed -i '/^exit 0/d' /etc/rc.d/rc.local
+		echo "nohup python /etc/udpserver.py >> /tmp/udpserver.log 2>&1 &" >> /etc/rc.d/rc.local
+		chmod +x /etc/rc.d/rc.local
+	elif [ -f /etc/rc.local ]
 	then
 		sed -i '/^exit 0/d' /etc/rc.local
 		echo "nohup python /etc/udpserver.py >> /tmp/udpserver.log 2>&1 &" >> /etc/rc.local
+		chmod +x /etc/rc.local
+	else
+		echo
 	fi
 }
 
