@@ -2,7 +2,7 @@
 
 An [IBM Cloud Schematics](https://console.bluemix.net/docs/services/schematics/index.html) template to launch an HPC (High Performance Computing) cluster for FSS (Financial Services Sector) Tech Preview.
 Schematics uses [Terraform](https://www.terraform.io/) as the infrastructure as code engine. With this template, you can provision and manage infrastructure as a single unit.
-See the [Terraform provider docs](https://ibm-bluemix.github.io/tf-ibm-docs/) for available resource for the IBM cloud.
+See the [Terraform provider docs](https://ibm-bluemix.github.io/tf-ibm-docs/) for available resources for the IBM Cloud.
 
 **IMPORTANT**
 
@@ -72,7 +72,7 @@ Review the following diagrams for the topology of default symphony, cws, and lsf
 
 ### Create an environment with IBM Cloud Schematics
 Environments can be used to separate software components into development tiers (e.g. staging, QA, and production).
-1. In Bluemix, go to the menu and select the [Schematics dashboard](https://console.bluemix.net/schematics).
+1. In IBM Cloud, go to the menu and select the [Schematics dashboard](https://console.bluemix.net/schematics).
 2. In the left navigation menu, select **Templates** to access the template catalog.
 3. Click **Create** on the hpc-fss-cluster template. You are taken to a configuration page where you can define metadata about your environment.
 4. Define values for your variables according to the following table.
@@ -91,13 +91,13 @@ To run this project locally:
     * via [environment variables](https://www.terraform.io/intro/getting-started/variables.html#from-environment-variables)
 2. Run `terraform plan`. Terraform performs a dry run to show what resources will be created.
 3. Run `terraform apply`. Terraform creates and deploys resources to your environment.
-    * You can see deployed infrastructure in IBM Bluemix [here](https://control.bluemix.net/devices).
+    * You can see deployed infrastructure in IBM Cloud [here](https://control.bluemix.net/devices).
 4. Run `terraform destroy`. Terraform destroys all deployed resources in this environment.
 
 ### Variables
 |Variable Name|Description|Default Value|
 |-------------|-----------|-------------|
-|bluemix_api_key|Your Bluemix API key. You can get the value by running `bx iam api-key-create <key name>``.||
+|bluemix_api_key|Your IBM Cloud API key. You can get the value by running `bx iam api-key-create <key name>``.||
 |cluster_admin|The administrator account of the cluster: `egoadmin` or `lsfadmin`.|egoadmin|
 |cluster_name|The name of the cluster.|mycluster|
 |core_of_compute|The number of CPU cores to allocate to the compute server.|1|
@@ -126,8 +126,8 @@ To run this project locally:
 |prefix_dehost|The hostname prefix for Symphony development nodes.|dehost|
 |prefix_master|The hostname prefix for the master server.|master|
 |product|The cluster product to deploy: `symphony`, `cws`, or `lsf`.|symphony|
-|softlayer_api_key|Your Bluemix Infrastructure (SoftLayer) API key.||
-|softlayer_username|Your Bluemix Infrastructure (SoftLayer) user name.||
+|softlayer_api_key|Your IBM Cloud Infrastructure (SoftLayer) API key.||
+|softlayer_username|Your IBM Cloud Infrastructure (SoftLayer) user name.||
 |ssh_key_label|An identifying label to assign to the SSH key.|ssh_compute_key|
 |ssh_key_note|A description to assign to the SSH key.|ssh key for cluster hosts|
 |ssh_public_key|The public key contents for the SSH keypair to access cluster nodes.||
