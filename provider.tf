@@ -16,11 +16,11 @@ provider "ibm" {
 }
 
 variable bluemix_api_key {
-  description = "Your Bluemix API Key."
+  description = "Your IBM Cloud API Key."
 }
 variable softlayer_username {
-  description = "Your Bluemix Infrastructure (SoftLayer) user name."
+  description = "Your IBM Cloud Infrastructure (SoftLayer) user name."
 }
 variable softlayer_api_key {
-  description = "Your Bluemix Infrastructure (SoftLayer) API key."
+  description = "Your IBM Cloud Infrastructure (SoftLayer) API key."
 }

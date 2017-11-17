@@ -32,8 +32,52 @@ resource "ibm_compute_vm_instance" "masters" {
   network_speed     = "${var.network_speed_master}"
   cores             = "${var.core_of_master}"
   memory            = "${var.memory_in_mb_master}"
-  count             = "${var.master_use_bare_metal ? 0 : 1}"
+  count             = "${var.master_use_bare_metal ? 0 : var.image_id > 0 ? 0 : var.private_vlan_id > 0 ? 0 : 1}"
   user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_network_only        = false
+}
+resource "ibm_compute_vm_instance" "masters-image" {
+  hostname          = "${var.prefix_master}${count.index}"
+  domain            = "${var.domain_name}"
+  ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
+  image_id          = "${var.image_id}"
+  datacenter        = "${var.datacenter}"
+  hourly_billing    = "${var.hourly_billing_master}"
+  network_speed     = "${var.network_speed_master}"
+  cores             = "${var.core_of_master}"
+  memory            = "${var.memory_in_mb_master}"
+  count             = "${var.master_use_bare_metal ? 0 : var.private_vlan_id > 0 ? 0 : var.image_id > 0 ? 1 : 0}"
+  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_network_only        = false
+}
+resource "ibm_compute_vm_instance" "masters-vlan" {
+  hostname          = "${var.prefix_master}${count.index}"
+  domain            = "${var.domain_name}"
+  ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
+  os_reference_code = "${var.os_reference}"
+  datacenter        = "${var.datacenter}"
+  hourly_billing    = "${var.hourly_billing_master}"
+  network_speed     = "${var.network_speed_master}"
+  cores             = "${var.core_of_master}"
+  memory            = "${var.memory_in_mb_master}"
+  count             = "${var.master_use_bare_metal ? 0 : var.image_id > 0 ? 0 : var.private_vlan_id > 0 ? 1 : 0}"
+  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_vlan_id = "${var.private_vlan_id}"
+  private_network_only        = false
+}
+resource "ibm_compute_vm_instance" "masters-vlan-image" {
+  hostname          = "${var.prefix_master}${count.index}"
+  domain            = "${var.domain_name}"
+  ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
+  image_id          = "${var.image_id}"
+  datacenter        = "${var.datacenter}"
+  hourly_billing    = "${var.hourly_billing_master}"
+  network_speed     = "${var.network_speed_master}"
+  cores             = "${var.core_of_master}"
+  memory            = "${var.memory_in_mb_master}"
+  count             = "${var.master_use_bare_metal ? 0 : var.image_id > 0 && var.private_vlan_id > 0 ? 1 : 0}"
+  user_metadata = "#!/bin/bash\n\ndeclare -i numbercomputes=${var.number_of_compute + var.number_of_compute_bare_metal}\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=master\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_vlan_id = "${var.private_vlan_id}"
   private_network_only        = false
 }
 
@@ -47,7 +91,7 @@ resource "ibm_compute_bare_metal" "computes" {
   hourly_billing    = "${var.hourly_billing_compute}"
   network_speed     = "${var.network_speed_compute}"
   count             = "${var.number_of_compute_bare_metal}"
-  user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n"
+  user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname, ibm_compute_vm_instance.masters-image.*.hostname, ibm_compute_vm_instance.masters-vlan.*.hostname, ibm_compute_vm_instance.masters-vlan-image.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private, ibm_compute_vm_instance.masters-image.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address, ibm_compute_vm_instance.masters-image.*.ipv4_address, ibm_compute_vm_instance.masters-vlan.*.ipv4_address, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n"
   post_install_script_uri     = "${var.post_install_script_uri}"
   private_network_only        = false
 }
@@ -62,8 +106,52 @@ resource "ibm_compute_vm_instance" "computes" {
   network_speed     = "${var.network_speed_compute}"
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
-  count             = "${var.number_of_compute}"
-  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  count             = "${var.private_vlan_id > 0 ? 0 : var.image_id > 0 ? 0 : var.number_of_compute}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname, ibm_compute_vm_instance.masters-image.*.hostname, ibm_compute_vm_instance.masters-vlan.*.hostname, ibm_compute_vm_instance.masters-vlan-image.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private, ibm_compute_vm_instance.masters-image.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address, ibm_compute_vm_instance.masters-image.*.ipv4_address, ibm_compute_vm_instance.masters-vlan.*.ipv4_address, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_network_only        = "${var.master_use_bare_metal ? false : var.use_intranet}"
+}
+resource "ibm_compute_vm_instance" "computes-image" {
+  hostname          = "${var.prefix_compute}${count.index}"
+  domain            = "${var.domain_name}"
+  ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
+  image_id          = "${var.image_id}"
+  datacenter        = "${var.datacenter}"
+  hourly_billing    = "${var.hourly_billing_compute}"
+  network_speed     = "${var.network_speed_compute}"
+  cores             = "${var.core_of_compute}"
+  memory            = "${var.memory_in_mb_compute}"
+  count             = "${var.private_vlan_id > 0 ? 0 : var.image_id > 0 ? var.number_of_compute : 0 }"
+  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname, ibm_compute_vm_instance.masters-image.*.hostname, ibm_compute_vm_instance.masters-vlan.*.hostname, ibm_compute_vm_instance.masters-vlan-image.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private, ibm_compute_vm_instance.masters-image.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address, ibm_compute_vm_instance.masters-image.*.ipv4_address, ibm_compute_vm_instance.masters-vlan.*.ipv4_address, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_network_only        = "${var.master_use_bare_metal ? false : var.use_intranet}"
+}
+resource "ibm_compute_vm_instance" "computes-vlan" {
+  hostname          = "${var.prefix_compute}${count.index}"
+  domain            = "${var.domain_name}"
+  ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
+  os_reference_code = "${var.os_reference}"
+  datacenter        = "${var.datacenter}"
+  hourly_billing    = "${var.hourly_billing_compute}"
+  network_speed     = "${var.network_speed_compute}"
+  cores             = "${var.core_of_compute}"
+  memory            = "${var.memory_in_mb_compute}"
+  count             = "${var.private_vlan_id > 0 ? var.image_id > 0 ? 0 : var.number_of_compute : 0}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname, ibm_compute_vm_instance.masters-image.*.hostname, ibm_compute_vm_instance.masters-vlan.*.hostname, ibm_compute_vm_instance.masters-vlan-image.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private, ibm_compute_vm_instance.masters-image.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address, ibm_compute_vm_instance.masters-image.*.ipv4_address, ibm_compute_vm_instance.masters-vlan.*.ipv4_address, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_vlan_id = "${var.private_vlan_id}"
+  private_network_only        = "${var.master_use_bare_metal ? false : var.use_intranet}"
+}
+resource "ibm_compute_vm_instance" "computes-vlan-image" {
+  hostname          = "${var.prefix_compute}${count.index}"
+  domain            = "${var.domain_name}"
+  ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
+  image_id          = "${var.image_id}"
+  datacenter        = "${var.datacenter}"
+  hourly_billing    = "${var.hourly_billing_compute}"
+  network_speed     = "${var.network_speed_compute}"
+  cores             = "${var.core_of_compute}"
+  memory            = "${var.memory_in_mb_compute}"
+  count             = "${var.private_vlan_id > 0 ? var.image_id > 0 ? var.number_of_compute :0 : 0}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=${var.use_intranet}\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=compute\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname, ibm_compute_vm_instance.masters-image.*.hostname, ibm_compute_vm_instance.masters-vlan.*.hostname, ibm_compute_vm_instance.masters-vlan-image.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private, ibm_compute_vm_instance.masters-image.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address, ibm_compute_vm_instance.masters-image.*.ipv4_address, ibm_compute_vm_instance.masters-vlan.*.ipv4_address, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address)))}\nentitlement=${base64encode(var.entitlement)}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_vlan_id = "${var.private_vlan_id}"
   private_network_only        = "${var.master_use_bare_metal ? false : var.use_intranet}"
 }
 
@@ -78,7 +166,7 @@ resource "ibm_compute_vm_instance" "dehosts" {
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
   count             = "${var.product == "symphony" ? var.number_of_dehost : 0}"
-  user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symde\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symde\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname, ibm_compute_vm_instance.masters-image.*.hostname, ibm_compute_vm_instance.masters-vlan.*.hostname, ibm_compute_vm_instance.masters-vlan-image.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private, ibm_compute_vm_instance.masters-image.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address, ibm_compute_vm_instance.masters-image.*.ipv4_address, ibm_compute_vm_instance.masters-vlan.*.ipv4_address, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = false
 }
 
@@ -225,4 +313,12 @@ variable number_of_compute_bare_metal {
 variable prefix_compute_bare_metal {
   default = "bmcompute"
   description = "The hostname prefix for bare metal compute nodes."
+}
+variable image_id {
+  default = 0
+  description = "specify the vm image id for the resource"
+}
+variable private_vlan_id {
+  default = 0
+  description = "specify the vm vlan to place the resource"
 }
