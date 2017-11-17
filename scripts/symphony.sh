@@ -151,8 +151,10 @@ function download_packages()
 	if [ "$MASTERHOSTNAMES" == "$MASTERHOST" ]
 	then
 		# we can get the package from anywhere applicable, then export through nfs://export, not implemented here yet
-		if [ "$PRODUCT" == "symphony" ]
+		if [ -d /opt/ibm/spectrumcomputing ]
 		then
+			LOG "bypass downloading packages ..."
+		else
 			LOG "download symphony packages ..."
 			mkdir -p /export/symphony/${VERSION}
 			if [ "${VERSION}" == "latest" ]
@@ -228,30 +230,35 @@ function install_symphony()
 	LOG "installing ${PRODUCT} version ${VERSION} ..."
 	sed -i -e '/7869/d'  -e '/7870/d' -e '/7871/d' /etc/services
 	echo "... trying to install symphony version $VERSION"
-	if [ "${ROLE}" == "symde" ]
+	if [ -d /opt/ibm/spectrumcomputing ]
 	then
-		if [ "$VERSION" == "latest" -o "$VERSION" = "7.2.0.0" ]
-		then
-			LOG "\tsh /export/symphony/${VERSION}/symde-7.2.0.0_x86_64.bin --quiet"
-			sh /export/symphony/${VERSION}/symde-7.2.0.0_x86_64.bin --quiet
-		fi
+		LOG "bypassing installing $PRODUCT ..."
 	else
-		if [ "${ROLE}" == "compute" ]
+		if [ "${ROLE}" == "symde" ]
 		then
-			export EGOCOMPUTEHOST=Y
-		fi
-		if [ "$VERSION" == "latest" -o "$VERSION" = "7.2.0.0" ]
-		then
-			LOG "\tsh /export/symphony/${VERSION}/sym-7.2.0.0_x86_64.bin --quiet"
-			sh /export/symphony/${VERSION}/sym-7.2.0.0_x86_64.bin --quiet
-		elif [ "$VERSION" == "7.1.2" ]
-		then
-			LOG "\tsh /export/symphony/${VERSION}/sym-7.1.2.0_x86_64.bin --quiet"
-			sh /export/symphony/${VERSION}/sym-7.1.2.0_x86_64.bin --quiet
+			if [ "$VERSION" == "latest" -o "$VERSION" = "7.2.0.0" ]
+			then
+				LOG "\tsh /export/symphony/${VERSION}/symde-7.2.0.0_x86_64.bin --quiet"
+				sh /export/symphony/${VERSION}/symde-7.2.0.0_x86_64.bin --quiet
+			fi
 		else
-			LOG "\tfailed to install application"
-			echo "... unimplimented version"
-			echo "... failed to install application" >> /root/symphony_failed
+			if [ "${ROLE}" == "compute" ]
+			then
+				export EGOCOMPUTEHOST=Y
+			fi
+			if [ "$VERSION" == "latest" -o "$VERSION" = "7.2.0.0" ]
+			then
+				LOG "\tsh /export/symphony/${VERSION}/sym-7.2.0.0_x86_64.bin --quiet"
+				sh /export/symphony/${VERSION}/sym-7.2.0.0_x86_64.bin --quiet
+			elif [ "$VERSION" == "7.1.2" ]
+			then
+				LOG "\tsh /export/symphony/${VERSION}/sym-7.1.2.0_x86_64.bin --quiet"
+				sh /export/symphony/${VERSION}/sym-7.1.2.0_x86_64.bin --quiet
+			else
+				LOG "\tfailed to install application"
+				echo "... unimplimented version"
+				echo "... failed to install application" >> /root/symphony_failed
+			fi
 		fi
 	fi
 }
