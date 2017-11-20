@@ -165,8 +165,23 @@ resource "ibm_compute_vm_instance" "dehosts" {
   network_speed     = "${var.network_speed_compute}"
   cores             = "${var.core_of_compute}"
   memory            = "${var.memory_in_mb_compute}"
-  count             = "${var.product == "symphony" ? var.number_of_dehost : 0}"
+  count             = "${var.product == "symphony" ? var.private_vlan_id > 0 ? 0 : var.number_of_dehost : 0}"
   user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symde\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname, ibm_compute_vm_instance.masters-image.*.hostname, ibm_compute_vm_instance.masters-vlan.*.hostname, ibm_compute_vm_instance.masters-vlan-image.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private, ibm_compute_vm_instance.masters-image.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address, ibm_compute_vm_instance.masters-image.*.ipv4_address, ibm_compute_vm_instance.masters-vlan.*.ipv4_address, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_network_only        = false
+}
+resource "ibm_compute_vm_instance" "dehosts-vlan" {
+  hostname          = "${var.prefix_dehost}${count.index}"
+  domain            = "${var.domain_name}"
+  ssh_key_ids       = ["${ibm_compute_ssh_key.ssh_compute_key.id}"]
+  os_reference_code = "${var.os_reference}"
+  datacenter        = "${var.datacenter}"
+  hourly_billing    = "${var.hourly_billing_compute}"
+  network_speed     = "${var.network_speed_compute}"
+  cores             = "${var.core_of_compute}"
+  memory            = "${var.memory_in_mb_compute}"
+  count             = "${var.product == "symphony" ? var.private_vlan_id > 0 ? var.number_of_dehost : 0 : 0}"
+  user_metadata = "#!/bin/bash\n\nuseintranet=false\ndomain=${var.domain_name}\nproduct=${var.product}\nversion=${var.version}\nrole=symde\nclusteradmin=${var.cluster_admin}\nclustername=${var.cluster_name}\nmasterhostnames=${join(" ",compact(concat(ibm_compute_bare_metal.masters.*.hostname, ibm_compute_vm_instance.masters.*.hostname, ibm_compute_vm_instance.masters-image.*.hostname, ibm_compute_vm_instance.masters-vlan.*.hostname, ibm_compute_vm_instance.masters-vlan-image.*.hostname)))}\nmasterprivateipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.private_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address_private, ibm_compute_vm_instance.masters-image.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan.*.ipv4_address_private, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address_private)))}\nmasterpublicipaddress=${join(" ", compact(concat(ibm_compute_bare_metal.masters.*.public_ipv4_address, ibm_compute_vm_instance.masters.*.ipv4_address, ibm_compute_vm_instance.masters-image.*.ipv4_address, ibm_compute_vm_instance.masters-vlan.*.ipv4_address, ibm_compute_vm_instance.masters-vlan-image.*.ipv4_address)))}\nfunctionsfile=${replace(var.post_install_script_uri, basename(var.post_install_script_uri), var.product)}.sh\nuri_file_entitlement=${var.uri_file_entitlement}\nuri_package_installer=${var.uri_package_installer}\nuri_package_additional=${var.uri_package_additional}\nuri_package_additional2=${var.uri_package_additional2}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  private_vlan_id  = "${var.private_vlan_id}"
   private_network_only        = false
 }
 
@@ -206,6 +221,10 @@ variable os_reference {
   default = "CENTOS_7_64"
   description = "An operating system reference code that is used to provision the cluster nodes."
 }
+variable image_id {
+  default = 0
+  description = "specify the vm image id for the resource"
+}
 variable number_of_compute {
   default = 2
   description = "The number of VM compute nodes to deploy."
@@ -217,6 +236,10 @@ variable number_of_dehost {
 variable datacenter {
   default = "dal12"
   description = "The datacenter to create resources in."
+}
+variable private_vlan_id {
+  default = 0
+  description = "specify the vm vlan to place the resource"
 }
 variable ssh_key_label {
   default = "ssh_compute_key"
@@ -313,12 +336,4 @@ variable number_of_compute_bare_metal {
 variable prefix_compute_bare_metal {
   default = "bmcompute"
   description = "The hostname prefix for bare metal compute nodes."
-}
-variable image_id {
-  default = 0
-  description = "specify the vm image id for the resource"
-}
-variable private_vlan_id {
-  default = 0
-  description = "specify the vm vlan to place the resource"
 }

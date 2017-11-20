@@ -104,22 +104,24 @@ To run this project locally:
 |core_of_master|The number of CPU cores to allocate to the master server.|2|
 |datacenter_bare_metal|The data center to create bare metal resources in. You can get the list by running `bluemix cs locations`.|wdc04|
 |datacenter|The data center to create resources in. You can get the list by running `bluemix cs locations`.|dal12|
+|private_vlan_id|(advanced)The private vlan to create vm resources in. defaults to 0 for automatic placement.|0|
 |domain_name|The name of the domain for the instance.|domain.com|
 |entitlement|Entitlement content that enables use of the cluster software.||
 |fixed_config_preset|The bare metal hardware configuration.|S1270_32GB_2X960GBSSD_NORAID|
 |hourly_billing_compute|The billing type for the instance. When set to true, the computing instance is billed on hourly usage. Otherwise, the instance is billed on a monthly basis.|true|
 |hourly_billing_master|The billing type for the instance. When set to true, the master node is billed on hourly usage. Otherwise, the instance is billed on a monthly basis.|true|
-|master_failover|Specifies whether or not HA is enabled for master nodes.|false|
-|master_use_bare_metal|If set to `true`, bare metal masters are created. If set to `false`, VM masters are created.|false|
+|master_failover|(advanced)Specifies whether or not HA is enabled for master nodes.|false|
+|master_use_bare_metal|(advanced)If set to `true`, bare metal masters are created. If set to `false`, VM masters are created.|false|
 |memory_in_mb_compute|The amount of memory (in Mb) to allocate to the compute server.|4096|
 |memory_in_mb_master|The amount of memory (in Mb) to allocate to the master server.|8192|
 |network_speed_compute|The network interface speed for the compute nodes.|1000|
 |network_speed_master|The network interface speed for the master nodes.|1000|
-|number_of_compute_bare_metal|The number of bare metal compute nodes to deploy.|0|
+|number_of_compute_bare_metal|(advanced)The number of bare metal compute nodes to deploy.|0|
 |number_of_compute|The number of VM compute nodes to deploy.|2|
 |number_of_dehost|The number of development nodes to depoy.|1|
 |os_reference_bare_metal|An operating system reference code that is used to provision the bare metal server.|UBUNTU_16_64|
 |os_reference|An operating system reference code that is used to provision the cluster nodes. Get a complete list of the OS reference codes available (use your API key as the password to log in).|CENTOS_7_64|
+|image_id|(advanced)speicfy the image id for vm instances. defaults to 0 meaning use os_reference instead|0|
 |post_install_script_uri|The URI for the deployment script.|https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/scripts/ibm_spectrum_computing_deploy.sh|
 |prefix_compute_bare_metal|The hostname prefix for bare metal compute nodes.|bmcompute|
 |prefix_compute|The hostname prefix for compute nodes.|compute|
@@ -135,7 +137,7 @@ To run this project locally:
 |uri_package_additional|The URL to the product package supplement file.||
 |uri_package_additional2|The URL to an additional product package supplement file.||
 |uri_package_installer|The URL to the product package installation file.||
-|use_intranet|Specifies whether the cluster resolves hostnames with intranet or internet IP addresses.|true|
+|use_intranet|(advanced)Specifies whether the cluster resolves hostnames with intranet or internet IP addresses.|true|
 |version|The version of the cluster product: `latest`, `7.2.0.0`, `2.2.0.0`, or `10.1`.|latest|
 
 ## Advanced Usage
