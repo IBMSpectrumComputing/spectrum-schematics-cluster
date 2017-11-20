@@ -231,7 +231,7 @@ variable cluster_admin {
   description = "The administrator account of the cluster: `egoadmin` or `lsfadmin`."
 }
 variable cluster_name {
-  default = "symcluster"
+  default = "cluster1"
   description = "The name of the cluster."
 }
 variable domain_name {
