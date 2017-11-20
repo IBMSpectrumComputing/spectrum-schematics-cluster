@@ -221,6 +221,10 @@ variable os_reference {
   default = "CENTOS_7_64"
   description = "An operating system reference code that is used to provision the cluster nodes."
 }
+variable image_id {
+  default = 0
+  description = "specify the vm image id for the resource"
+}
 variable number_of_compute {
   default = 2
   description = "The number of VM compute nodes to deploy."
@@ -232,6 +236,10 @@ variable number_of_dehost {
 variable datacenter {
   default = "dal12"
   description = "The datacenter to create resources in."
+}
+variable private_vlan_id {
+  default = 0
+  description = "specify the vm vlan to place the resource"
 }
 variable ssh_key_label {
   default = "ssh_compute_key"
@@ -328,12 +336,4 @@ variable number_of_compute_bare_metal {
 variable prefix_compute_bare_metal {
   default = "bmcompute"
   description = "The hostname prefix for bare metal compute nodes."
-}
-variable image_id {
-  default = 0
-  description = "specify the vm image id for the resource"
-}
-variable private_vlan_id {
-  default = 0
-  description = "specify the vm vlan to place the resource"
 }
