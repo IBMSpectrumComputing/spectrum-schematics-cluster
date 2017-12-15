@@ -2,18 +2,18 @@
 
 An [IBM Cloud Schematics](https://console.bluemix.net/docs/services/schematics/index.html) template to launch an HPC (High Performance Computing) cluster for FSS (Financial Services Sector) Tech Preview.
 Schematics uses [Terraform](https://www.terraform.io/) as the infrastructure as code engine. With this template, you can provision and manage infrastructure as a single unit.
-See the [Terraform provider docs](https://ibm-bluemix.github.io/tf-ibm-docs/) for available resources for the IBM Cloud.
+See the [Terraform provider docs](https://ibm-bluemix.github.io/tf-ibm-docs/) for available resources for the IBM Cloud. **Note**: To create the resources that this template requests, your [IBM Cloud Infrastructure (Softlayer) account](https://console.bluemix.net/docs/iam/mnginfra.html#managing-infrastructure-access) and [IBM Cloud account](https://console.bluemix.net/docs/iam/mngiam.html#iammanidaccser) must have sufficient permissions.
 
 **IMPORTANT**
 
-Due to legal requirement, we cannot provide product packages and entitlement in this template. You must either provide your own product packages and entitlement links, or use the IBM Spectrum Cluster evaluation packages and entitlement links from the following IBM URLs, and specify those values in `uri_file_entitlement`, `uri_package_installer`, `uri_package_additional`, `uri_package_additional2` variables in the Variables section of your environment created using the hpc-fss-cluser template. 
+Due to legal requirement, we cannot provide product packages and entitlement in this template. You must either provide your own product packages and entitlement links, or use the IBM Spectrum Cluster evaluation packages and entitlement links from the following IBM URLs, and specify those values in `uri_file_entitlement`, `uri_package_installer`, `uri_package_additional`, `uri_package_additional2` variables in the Variables section of your environment created using the hpc-fss-cluser template.
 
 If you use the evaluation edition, after selecting "I agree" to the license and "Download using http" option, for each files listed below, right click "download now" and specify "Copy Link Address" to copy the download URL and then use that link address in the applicable `uri_` variable field. For example, copy the link address for the IBM Spectrum Symphony evaluation edition entitlement file, and use it as the `uri_file_entitlement` variable value in the environment. Repeat the process for the required evaluation edition packages listed below. The evaluation edition links are unique for each user and are only valid for a few days):
 
 If you use IBM Passport Advantage, use the corresponding urls instead. Note that the package name will not have the word "eval".
 
 If you host your own web or ftp service to provide the packages and entitlement, use the corresponding urls instead.
- 
+
 Evaluation: IBM Spectrum Symphony latest (7.2.0.0): https://www.ibm.com/marketing/iwm/iwm/web/preLogin.do?source=swerpzsw-symphony-3
   - `uri_file_entitlement`   = "https://......./sym_adv_ev_entitlement.dat"
   - `uri_package_installer`  = "https://......./symeval-7.2.0.0_x86_64.bin"

@@ -117,8 +117,8 @@ function app_depend()
 	then
 		if [ -f /etc/redhat-release ]
 		then
-			LOG "\tyum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd"
-			yum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd
+			LOG "\tyum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd unzip"
+			yum -y install java-1.7.0-openjdk gcc gcc-c++ glibc.i686 httpd unzip
 			if [ "${ROLE}" == 'symde' ]
 			then
 				LOG "\tyum -y install tigervnc-server xterm firefox"
@@ -126,12 +126,12 @@ function app_depend()
 			fi
 		elif [ -f /etc/lsb-release ]
 		then
-			LOG "\tapt-get install -y gcc g++ openjdk-8-jdk make"
+			LOG "\tapt-get install -y gcc g++ openjdk-8-jdk make unzip"
 			if  cat /etc/lsb-release | egrep -qi "ubuntu 16"
 			then
-				apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages gcc g++ openjdk-8-jdk make
+				apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages gcc g++ openjdk-8-jdk make unzip
 			else
-				apt-get install -y --force-yes gcc g++ openjdk-7-jdk make
+				apt-get install -y --force-yes gcc g++ openjdk-7-jdk make unzip
 			fi
 			if [ "${ROLE}" == 'symde' ]
 			then
