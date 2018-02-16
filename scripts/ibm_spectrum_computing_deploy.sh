@@ -56,20 +56,21 @@ function funcSetupProxyService()
 
 function funcUseProxyService()
 {
-	if [ "${useintranet}" != "false" -a "${role}" != "master" -a "${role}" != "symde" ]
+	if [ "${useintranet}" != "false" -a "${role}" != "master" -a "${role}" != "failover" -a "${role}" != "symde" ]
 	then
-		export http_proxy=http://${masterprivateipaddress}:3128
-		export https_proxy=http://${masterprivateipaddress}:3128
-		export ftp_proxy=http://${masterprivateipaddress}:3128
-		echo export http_proxy=http://${masterprivateipaddress}:3128 >> /root/.bash_profile
-		echo export https_proxy=http://${masterprivateipaddress}:3128 >> /root/.bash_profile
-		echo export ftp_proxy=http://${masterprivateipaddress}:3128 >> /root/.bash_profile
+		realmasterprivateipaddress=`echo ${masterprivateipaddress} | awk '{print $1}'`
+		export http_proxy=http://${realmasterprivateipaddress}:3128
+		export https_proxy=http://${realmasterprivateipaddress}:3128
+		export ftp_proxy=http://${realmasterprivateipaddress}:3128
+		echo export http_proxy=http://${realmasterprivateipaddress}:3128 >> /root/.bash_profile
+		echo export https_proxy=http://${realmasterprivateipaddress}:3128 >> /root/.bash_profile
+		echo export ftp_proxy=http://${realmasterprivateipaddress}:3128 >> /root/.bash_profile
 		if [ -f /etc/redhat-release ]
 		then
-			echo "proxy=http://${masterprivateipaddress}:3128" >> /etc/yum.conf
+			echo "proxy=http://${realmasterprivateipaddress}:3128" >> /etc/yum.conf
 		elif [ -f /etc/lsb-release ]
 		then
-			echo "Acquire::http::Proxy \"http://${masterprivateipaddress}:3128/\";" > /etc/apt/apt.conf
+			echo "Acquire::http::Proxy \"http://${realmasterprivateipaddress}:3128/\";" > /etc/apt/apt.conf
 		else
 			echo noconfig
 		fi
@@ -130,10 +131,10 @@ function funcGetPublicIp()
 	ip address show | egrep "inet .*global" | egrep -v "inet[ ]+10\." | head -1 | awk '{print $2}' | sed -e 's/\/.*//'
 }
 
-function funcStartConfService()
+function funcStartFailoverService()
 {
-	mkdir -p /export
-	echo -e "/export\t\t10.0.0.0/8(ro,no_root_squash) 172.16.0.0/12(ro,no_root_squash) 192.168.0.0/16(ro,no_root_squash)" > /etc/exports
+	mkdir -p /failover
+	echo -e "/failover\t\t10.0.0.0/8(rw,no_root_squash) 172.16.0.0/12(rw,no_root_squash) 192.168.0.0/16(rw,no_root_squash)" > /etc/exports
 	if [ -f /etc/redhat-release ]
 	then
 		systemctl enable nfs
@@ -147,18 +148,64 @@ function funcStartConfService()
 	fi
 }
 
+function funcConnectFailoverService()
+{
+	mkdir -p /failover
+	#if [ -n "${nfsipaddress}" -a "$useintranet" == 'true' ]
+	if [ -n "${nfsipaddress}" ]
+	then
+		while ! mount | grep failover | grep -v grep
+		do
+			LOG "\tmounting /failover ..."
+			mount -o tcp,vers=3,rsize=32768,wsize=32768 ${nfsipaddress}:/failover /failover
+			touch /failover/connected-${localhostname}
+			sleep 60
+		done
+		LOG "\tmounted /failover ..."
+	fi
+}
+
+function funcStartConfService()
+{
+	if [ "$role" == "master" ]
+	then
+		mkdir -p /export
+		echo -e "/export\t\t10.0.0.0/8(ro,no_root_squash) 172.16.0.0/12(ro,no_root_squash) 192.168.0.0/16(ro,no_root_squash)" > /etc/exports
+		if [ -f /etc/redhat-release ]
+		then
+			systemctl enable nfs
+			systemctl start nfs
+		elif [ -f /etc/lsb-release ]
+		then
+			systemctl enable nfs-server
+			systemctl restart nfs-server
+		else
+			echo "not known"
+		fi
+	fi
+}
+
 function funcConnectConfService()
 {
 	mkdir -p /export
-	if [ "$useintranet" == 'true' ]
+	if [ "${role}" == "symde" ]
 	then
-		while ! mount | grep export | grep -v grep
-		do
-			LOG "\tmounting /export ..."
-			mount -o tcp,vers=3,rsize=32768,wsize=32768 ${masteripaddress}:/export /export
-			sleep 60
-		done
-		LOG "\tmounted /export ..."
+		echo doing nothing
+	elif [ "$role" == "failover" -o "$role" == "compute" ]
+	then
+		if [ -n "${masteripaddress}" -a "$useintranet" == 'true' ]
+		then
+			realmasterip=`echo ${masteripaddress} | awk '{print $1}'`
+			while ! mount | grep export | grep -v grep
+			do
+				LOG "\tmounting /export ..."
+				mount -o tcp,vers=3,rsize=32768,wsize=32768 ${realmasterip}:/export /export
+				sleep 60
+			done
+			LOG "\tmounted /export ..."
+		fi
+	else
+		echo doing nothing
 	fi
 }
 
@@ -171,9 +218,10 @@ function funcDetermineConnection()
 		masterpublicipaddress=$(funcGetPublicIp)
 	fi
 	masteripaddress=${masterprivateipaddress}
+	realmasteripaddress=`echo ${masterprivateipaddress} | awk '{print $1}'`
 	
 	## if localipaddress is not in the same subnet as masterprivateipaddress, force using internet
-	if [ "${localipaddress%.*}" != "${masterprivateipaddress%.*}" ]
+	if [ "${localipaddress%.*}" != "${realmasteripaddress%.*}" ]
 	then
 		useintranet=false
 	fi
@@ -193,27 +241,38 @@ os_config
 # get local hostname, ipaddress and netmask
 localhostname=$(hostname -s)
 localipaddress=$(funcGetPrivateIp)
+echo -e "127.0.0.1\tlocalhost.localdomain\tlocalhost\n${localipaddress}\t${localhostname}.${domain}\t${localhostname}" > /etc/hosts
+
+#normalize variables
+export PRODUCT=$product
+export VERSION=$version
+export ROLE=$role
+export CLUSTERNAME=$clustername
+export OVERWRITE_EGO_CONFIGURATION=Yes
+export SIMPLIFIEDWEM=N
+export ENTITLEMENT_FILE=/tmp/entitlement
+export MASTERHOSTNAMES=$masterhostnames
+export MASTERHOST=`echo $MASTERHOSTNAMES | awk '{print $1}'`
+export FAILOVERHOST=`echo $MASTERHOSTNAMES | awk '{print $NF}'`
+if [ "$ROLE" == "master" ]
+then
+	export MASTERHOSTNAMES=${localhostname}
+	export MASTERHOST=${localhostname}
+	export FAILOVERHOST=${localhostname}
+fi
 
 # determine to use intranet or internet interface
 funcDetermineConnection
 
-# start nfs service on primary master and try to mount nfs service from compute nodes
-if [ -z "$masterhostnames" ]
+# start nfs service on primary master and nfs server and try to mount nfs service from compute nodes
+funcConnectFailoverService
+if [ "$role" == "nfsserver" ]
 then
-	if echo ${localhostname} | egrep -qi "0$"
-	then
-		funcStartConfService
-	else
-		funcConnectConfService
-	fi
-else
-	if [ "${role}" == "symde" ]
-	then
-		mkdir -p /export
-	else
-		funcConnectConfService
-	fi
+	funcStartFailoverService
+	exit
 fi
+funcStartConfService
+funcConnectConfService
 
 # download functions file if not there already
 LOG "donwloading product function file and source it"
@@ -224,37 +283,34 @@ then
 		wget --no-check-certificate -o /dev/null -O /export/${product}.sh ${functionsfile}
 	fi
 	LOG "\tfound /export/${product}.sh"
-	. /export/${product}.sh
 fi
+. /export/${product}.sh
 
 # create and/or start up upd server/client to update /etc/hosts and other messages
-if [ "$role" == "master" ]
+if [ "$role" == "master" -o "$role" == "failover" ]
 then
 	create_udp_server
 fi
-create_udp_client
-
-#normalize variables
-export PRODUCT=$product
-export VERSION=$version
-export ROLE=$role
-export CLUSTERNAME=$clustername
-export OVERWRITE_EGO_CONFIGURATION=Yes
-export SIMPLIFIEDWEM=N
-export ENTITLEMENT_FILE=/tmp/entitlement
-if [ -z "$masterhostnames" ]
+if [ "$role" != "master" -a "$role" != "nfsserver" ]
 then
-	masterhostnames=${localhostname}
-	echo -e "127.0.0.1\tlocalhost.localdomain\tlocalhost\n${localipaddress}\t${localhostname}.${domain}\t${localhostname}" > /etc/hosts
-	export MASTERHOSTNAMES=$masterhostnames
-	export MASTERHOST=`echo $MASTERHOSTNAMES | awk '{print $1}'`
-else
-	export MASTERHOSTNAMES=$masterhostnames
-	export MASTERHOST=`echo $MASTERHOSTNAMES | awk '{print $1}'`
-	python /tmp/udpclient.py "update ${localipaddress} ${localhostname}.${domain} ${localhostname}"
-	echo -e "127.0.0.1\tlocalhost.localdomain\tlocalhost\n${masteripaddress}\t${MASTERHOST}.${domain}\t${MASTERHOST}\n${localipaddress}\t${localhostname}.${domain}\t${localhostname}" > /etc/hosts
-	ping -c2 -w2 ${MASTERHOST}
+	create_udp_client
 fi
+
+if [ "$ROLE" != "nfsserver" -a "$ROLE" != "master" ]
+then
+	echo -e "`echo ${masteripaddress} | awk '{print $1}'`\t${MASTERHOST}.${domain}\t${MASTERHOST}" >> /etc/hosts
+	python /tmp/udpclient.py "update ${localipaddress} ${localhostname}.${domain} ${localhostname}"
+	ping -c2 -w2 ${MASTERHOST}
+	if [ "$MASTERHOST" != "${FAILOVERHOST}" ]
+	then
+		echo -e "`echo ${masteripaddress} | awk '{print $NF}'`\t${FAILOVERHOST}.${domain}\t${FAILOVERHOST}" >> /etc/hosts
+		ping -c2 -w2 ${FAILOVERHOST}
+	fi
+else
+	echo nothing
+fi
+
+
 export DERBY_DB_HOST=$MASTERHOST
 if [ -z "$clusteradmin" ]
 then
@@ -298,16 +354,9 @@ if [ "$PRODUCT" == "symphony" ]
 then
 	SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
 	deploy_product
-
-elif [ "$PRODUCT" == "cws" ]
+elif [ "$PRODUCT" == "cws" -o "$PRODUCT" == "lsf" ]
 then
-	echo installing spectrum computing CWS 
-	deploy_product
-
-# install LSF
-elif [ "$PRODUCT" == "lsf" ]
-then
-	echo installing spectrum computing LSF
+	echo installing spectrum computing $PRODUCT 
 	deploy_product
 else
 	echo "unsupported product $PRODUCT `date`" >> /root/application-failed

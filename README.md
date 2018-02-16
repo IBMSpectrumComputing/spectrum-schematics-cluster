@@ -2,7 +2,7 @@
 
 An [IBM Cloud Schematics](https://console.bluemix.net/docs/services/schematics/index.html) template to launch an HPC (High Performance Computing) cluster for FSS (Financial Services Sector) Tech Preview.
 Schematics uses [Terraform](https://www.terraform.io/) as the infrastructure as code engine. With this template, you can provision and manage infrastructure as a single unit.
-See the [Terraform provider docs](https://ibm-bluemix.github.io/tf-ibm-docs/) for available resources for the IBM Cloud. **Note**: To create the resources that this template requests, your [IBM Cloud Infrastructure (Softlayer) account](https://console.bluemix.net/docs/iam/mnginfra.html#managing-infrastructure-access) and [IBM Cloud account](https://console.bluemix.net/docs/iam/mngiam.html#iammanidaccser) must have sufficient permissions.
+See the [Terraform provider docs](https://ibm-cloud.github.io/tf-ibm-docs/) for available resources for the IBM Cloud. **Note**: To create the resources that this template requests, your [IBM Cloud Infrastructure (Softlayer) account](https://console.bluemix.net/docs/iam/mnginfra.html#managing-infrastructure-access) and [IBM Cloud account](https://console.bluemix.net/docs/iam/mngiam.html#iammanidaccser) must have sufficient permissions.
 
 **IMPORTANT**
 
@@ -100,6 +100,7 @@ To run this project locally:
 |bluemix_api_key|Your IBM Cloud API key. You can get the value by running `bx iam api-key-create <key name>``.||
 |cluster_admin|The administrator account of the cluster: `egoadmin` or `lsfadmin`.|egoadmin|
 |cluster_name|The name of the cluster.|mycluster|
+|cluster_web_admin_password|Password for web interface account Admin|Admin|
 |core_of_compute|The number of CPU cores to allocate to the compute server.|1|
 |core_of_master|The number of CPU cores to allocate to the master server.|2|
 |datacenter_bare_metal|The data center to create bare metal resources in. You can get the list by running `bluemix cs locations`.|wdc04|
@@ -110,7 +111,7 @@ To run this project locally:
 |fixed_config_preset|The bare metal hardware configuration.|S1270_32GB_2X960GBSSD_NORAID|
 |hourly_billing_compute|The billing type for the instance. When set to true, the computing instance is billed on hourly usage. Otherwise, the instance is billed on a monthly basis.|true|
 |hourly_billing_master|The billing type for the instance. When set to true, the master node is billed on hourly usage. Otherwise, the instance is billed on a monthly basis.|true|
-|master_failover|(advanced)Specifies whether or not HA is enabled for master nodes.|false|
+|failover_master|(advanced)Specifies whether or not HA is enabled for master nodes.|false|
 |master_use_bare_metal|(advanced)If set to `true`, bare metal masters are created. If set to `false`, VM masters are created.|false|
 |memory_in_mb_compute|The amount of memory (in Mb) to allocate to the compute server.|4096|
 |memory_in_mb_master|The amount of memory (in Mb) to allocate to the master server.|8192|
@@ -141,6 +142,13 @@ To run this project locally:
 |version|The version of the cluster product: `latest`, `7.2.0.0`, `2.2.0.0`, or `10.1`.|latest|
 
 ## Advanced Usage
+
+### Cluster HA 
+
+To enable master failover, set `failover_master` to 1 or true
+
+Currently, the failover implements only when master is virtual, it brings up a virtual as nfs server
+- to ensure nfs server and masters are in the same VLAN, you might need to specify `private_vlan_id` when you have multiple vlans in a specific datacenter
 
 ### Bare metal support
 

@@ -76,12 +76,14 @@ function create_udp_client()
 #!/usr/bin/env python
 
 import socket
-import sys
+import sys, time
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 for data in sys.argv:
-	print(data)
-	s.sendto(data,('${masteripaddress}',9999))
-	print(s.recv(1024))
+    print(data)
+    for master in "${masteripaddress}".split():
+        s.sendto(data,(master,9999))
+        time.sleep(1)
+        print(s.recv(1024))
 s.close()
 ENDF
 	chmod +x /tmp/udpclient.py
@@ -190,8 +192,6 @@ function download_packages()
 				fi
 			fi
 		fi
-	else
-		echo "wont come here before failover implementation"
 	fi
 }
 
@@ -224,7 +224,7 @@ function install_symphony()
 	else
 		if [ "${ROLE}" == "symde" ]
 		then
-			if [ "$VERSION" == "latest" -o "$VERSION" = "7.2.0.0" ]
+			if [ "$VERSION" == "latest" -o "$VERSION" = "7.2.0.0" -o "$VERSION" == "7.2.0.2"  ]
 			then
 				LOG "\tsh /export/symphony/${VERSION}/symde-7.2.0.0_x86_64.bin --quiet"
 				sh /export/symphony/${VERSION}/symde-7.2.0.0_x86_64.bin --quiet
@@ -234,7 +234,7 @@ function install_symphony()
 			then
 				export EGOCOMPUTEHOST=Y
 			fi
-			if [ "$VERSION" == "latest" -o "$VERSION" = "7.2.0.0" ]
+			if [ "$VERSION" == "latest" -o "$VERSION" = "7.2.0.0" -o "$VERSION" == "7.2.0.2" ]
 			then
 				LOG "\tsh /export/symphony/${VERSION}/sym-7.2.0.0_x86_64.bin --quiet"
 				sh /export/symphony/${VERSION}/sym-7.2.0.0_x86_64.bin --quiet
@@ -253,7 +253,7 @@ function install_symphony()
 
 function start_symphony()
 {
-	if [ "${ROLE}" == "master" -o "${ROLE}" == "compute" ]
+	if [ "${ROLE}" == "master" -o "${ROLE}" == "failover" -o "${ROLE}" == "compute" ]
 	then
 		LOG "\tstart symphony..."
 		if [ -f /etc/redhat-release ]
@@ -272,43 +272,66 @@ function configure_symphony()
 {
 	SOURCE_PROFILE=/opt/ibm/spectrumcomputing/profile.platform
 	## currently only single master
-	if [ "$MASTERHOSTNAMES" == "$MASTERHOST" ]
-	then
 		# no failover
-		if [ "${ROLE}" == "master" ]
+	if [ "${ROLE}" == "master" ]
+	then
+		LOG "configure symphony master ..."
+		LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}\""
+		su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}"
+		sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/named.xml
+		sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/wsg.xml
+		## disable compute role on head if there is compute nodes
+		if [ ${numbercomputes} -gt 0 ]
 		then
-			LOG "configure symphony master ..."
-			LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}\""
-			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig setentitlement ${ENTITLEMENT_FILE}"
-			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/named.xml
-			sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/wsg.xml
-			## disable compute role on head if there is compute nodes
+			if [ ! -f /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.${clustername} ]
+			then
+				sed -ibak "s/cluster1/${clustername}/" /opt/ibm/spectrumcomputing/kernel/conf/ego.shared
+				cp /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.cluster1  /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.${clustername}
+			fi
+			sed -ibak "s/\(^${MASTERHOST} .*\)(linux)\(.*\)/\1(linux mg)\2/" /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.${clustername}
+		fi
+		if [ -d /failover ]
+		then
+			chown -R $CLUSTERADMIN /failover
+			LOG "configure symphony master for failover using /failover..."
+			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig mghost /failover -f"
+			sleep 10
+			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig masterlist ${MASTERHOSTNAME},`echo ${MASTERHOSTNAME} | sed -e 's/0$/1/'` -f"
 			if [ ${numbercomputes} -gt 0 ]
 			then
-				if [ ! -f /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.${clustername} ]
+				if [ ! -f /failover/kernel/conf/ego.cluster.${clustername} ]
 				then
-					sed -ibak "s/cluster1/${clustername}/" /opt/ibm/spectrumcomputing/kernel/conf/ego.shared
-					cp /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.cluster1  /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.${clustername}
+					sed -ibak "s/cluster1/${clustername}/" /failover/kernel/conf/ego.shared
+					cp /failover/kernel/conf/ego.cluster.cluster1  /failover/kernel/conf/ego.cluster.${clustername}
 				fi
-				sed -ibak "s/\(^${MASTERHOST} .*\)(linux)\(.*\)/\1(linux mg)\2/" /opt/ibm/spectrumcomputing/kernel/conf/ego.cluster.${clustername}
+				sed -ibak "s/\(^${MASTERHOST} .*\)(linux)\(.*\)/\1(linux mg)\2/" /failover/kernel/conf/ego.cluster.${clustername}
 			fi
-		elif [ "$ROLE" == "compute" ]
-		then
-			LOG "configure symphony compute node ..."
-			LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f\""
-			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f"
-		elif [ "$ROLE" == "symde" ]
-		then
-			LOG "configure symphony de node ..."
-			sed -i "s/^EGO_MASTER_LIST=.*/EGO_MASTER_LIST=${MASTERHOST}/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
-			sed -i "s/^EGO_KD_PORT=.*/EGO_KD_PORT=7870/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
-			sed -i 's/$version = "3"/$version = "3" -o $version = "4"/' /opt/ibm/spectrumcomputing/symphonyde/de72/conf/profile.symclient
-			LOG "\tconfigured symphony de node ..."
-		else
-			echo nothing to do
 		fi
+	## handle failover
+	elif [ "$ROLE" == "failover" ]
+	then
+		LOG "configure symphony master failover..."
+		chown -R $CLUSTERADMIN /failover
+		LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig mghost /failover -f\""
+		su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig mghost /failover -f"
+		sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/named.xml
+		sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/wsg.xml
+	elif [ "$ROLE" == "compute" ]
+	then
+		LOG "configure symphony compute node ..."
+		LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f\""
+		su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f"
+	elif [ "$ROLE" == "symde" ]
+	then
+		LOG "configure symphony de node ..."
+		sed -i "s/^EGO_MASTER_LIST=.*/EGO_MASTER_LIST=${MASTERHOST}/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
+		sed -i "s/^EGO_KD_PORT=.*/EGO_KD_PORT=7870/" /opt/ibm/spectrumcomputing/symphonyde/de72/conf/ego.conf
+		sed -i 's/$version = "3"/$version = "3" -o $version = "4"/' /opt/ibm/spectrumcomputing/symphonyde/de72/conf/profile.symclient
+		LOG "\tconfigured symphony de node ..."
+	else
+		echo nothing to do
 	fi
-	if [ "${ROLE}" == "master" -o "${ROLE}" == "compute" ]
+	if [ "${ROLE}" == "master" -o "${ROLE}" == "failover" -o "${ROLE}" == "compute" ]
 	then
 		LOG "prepare to start symphony cluster ..."
 		LOG "\tegosetrc.sh; egosetsudoers.sh"
@@ -328,7 +351,7 @@ then
 	echo -e "\t...logon to soam client" >> ${LOG_FILE}
 	while [ 1 -lt 2 ]
 	do
-		if su - egoadmin -c "soamlogon -u Admin -x Admin" >/dev/null 2>&1
+		if su - $clusteradmin -c "soamlogon -u Admin -x Admin" >/dev/null 2>&1
 		then
 			break
 		else
@@ -339,10 +362,10 @@ then
 	echo -e "\t...logged on to soam client" >> ${LOG_FILE}
 	echo -e "\twait 2 minutes for the master to create consumer" >> ${LOG_FILE}
 	sleep 150
-	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; make ; cd Output; gzip SampleServiceCPP; soamdeploy add SampleServiceCPP -p SampleServiceCPP.gz -c \"/SampleAppCPP\""
-	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; sed -ibak 's/<SSM resReq/<SSM resourceGroupName=\"ManagementHosts\" resReq/' SampleApp.xml; sed -ibak 's/preStartApplication=/resourceGroupName=\"ComputeHosts\" preStartApplication=/' SampleApp.xml; soamreg SampleApp.xml" >> $LOG_FILE 2>&1
+	su - $clusteradmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; make ; cd Output; gzip SampleServiceCPP; soamdeploy add SampleServiceCPP -p SampleServiceCPP.gz -c \"/SampleAppCPP\""
+	su - $clusteradmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp; sed -ibak 's/<SSM resReq/<SSM resourceGroupName=\"ManagementHosts\" resReq/' SampleApp.xml; sed -ibak 's/preStartApplication=/resourceGroupName=\"ComputeHosts\" preStartApplication=/' SampleApp.xml; soamreg SampleApp.xml" >> $LOG_FILE 2>&1
 	echo -e "\tSampleAppCPP registered..." >> ${LOG_FILE}
-	su - egoadmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp/Output; ./SyncClient ; sleep 5; ./AsyncClient" >> $LOG_FILE 2>&1
+	#su - $clusteradmin -c "cd /opt/ibm/spectrumcomputing/symphonyde/de72/7.2/samples/CPP/SampleApp/Output; ./SyncClient ; sleep 5; ./AsyncClient" >> $LOG_FILE 2>&1
 
 elif [ "${ROLE}" == 'master' ]
 then
@@ -352,7 +375,7 @@ then
 		egosh user logon -u Admin -x Admin
 		while [ 1 -lt 2 ]
 		do
-			if su - egoadmin -c "egosh user logon -u Admin -x Admin" >/dev/null 2>&1
+			if su - $clusteradmin -c "egosh user logon -u Admin -x Admin" >/dev/null 2>&1
 			then
 				break
 			else
@@ -360,6 +383,15 @@ then
 			fi
 		done
 		echo -e "\t...logged on to ego" >> ${LOG_FILE}
+		if [ -d /failover ]
+		then
+			mc=`echo $MASTERHOST | sed -e 's/0$/1/'`
+			sleep 300
+			if su - $clusteradmin -c "egosh user logon -u Admin -x Admin" >/dev/null 2>&1
+			then
+				su - $clusteradmin -c "egosh ego restart -f"
+			fi
+		fi
 	fi
 else
 	echo "nothing to do"
@@ -397,7 +429,7 @@ function deploy_product() {
 			egosh user logon -u Admin -x Admin
 			LOG "\tlogged in ..."
 			LOG "create /SampleAppCPP consumer ..."
-			egosh consumer add "/SampleAppCPP" -a Admin -u Guest -e egoadmin -g "ManagementHosts,ComputeHosts" >> $LOG_FILE 2>&1
+			egosh consumer add "/SampleAppCPP" -a Admin -u Guest -e $clusteradmin -g "ManagementHosts,ComputeHosts" >> $LOG_FILE 2>&1
 			LOG "\tconsumer /SampleAppCPP created"
 			break
 		fi
