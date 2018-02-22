@@ -17,7 +17,7 @@ resource "ibm_compute_vm_instance" "nfsservers" {
   cores             = "1"
   memory            = "2048"
   count             = "${var.failover_master ? var.private_vlan_id > 0 ? 0 : 1 : 0}"
-  user_metadata = "#!/bin/bash\n\nrole=nfsserver\nproduct=${var.product}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  user_metadata = "#!/bin/bash\n\nrole=nfsserver\nproduct=${var.product}\ndomain=${var.domain_name}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_network_only        = false
 }
 resource "ibm_compute_vm_instance" "nfsservers-vlan" {
@@ -31,7 +31,7 @@ resource "ibm_compute_vm_instance" "nfsservers-vlan" {
   cores             = "1"
   memory            = "2048"
   count             = "${var.failover_master ? var.private_vlan_id > 0 ? 1 : 0 : 0}"
-  user_metadata = "#!/bin/bash\n\nrole=nfsserver\nproduct=${var.product}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
+  user_metadata = "#!/bin/bash\n\nrole=nfsserver\nproduct=${var.product}\ndomain=${var.domain_name}\n${file("scripts/ibm_spectrum_computing_deploy.sh")}"
   private_vlan_id = "${var.private_vlan_id}"
   private_network_only        = false
 }
@@ -399,7 +399,7 @@ variable hourly_billing_compute {
   description = "When set to true, the computing instance is billed on hourly usage. Otherwise, the instance is billed on a monthly basis."
 }
 variable post_install_script_uri {
-  default = "https://raw.githubusercontent.com/IBMSpectrumComputing/spectrum-schematics-cluster/master/scripts/ibm_spectrum_computing_deploy.sh"
+  default = "https://raw.githubusercontent.com/Cloud-Schematics/hpc-fss-cluster/master/scripts/ibm_spectrum_computing_deploy.sh"
   description = "The URL for the deployment script."
 }
 variable use_intranet {

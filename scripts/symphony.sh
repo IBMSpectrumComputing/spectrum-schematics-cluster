@@ -296,7 +296,7 @@ function configure_symphony()
 			LOG "configure symphony master for failover using /failover..."
 			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig mghost /failover -f"
 			sleep 10
-			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig masterlist ${MASTERHOSTNAME},`echo ${MASTERHOSTNAME} | sed -e 's/0$/1/'` -f"
+			su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig masterlist ${MASTERHOST},`echo ${MASTERHOST} | sed -e 's/0$/1/'` -f"
 			if [ ${numbercomputes} -gt 0 ]
 			then
 				if [ ! -f /failover/kernel/conf/ego.cluster.${clustername} ]
@@ -306,16 +306,24 @@ function configure_symphony()
 				fi
 				sed -ibak "s/\(^${MASTERHOST} .*\)(linux)\(.*\)/\1(linux mg)\2/" /failover/kernel/conf/ego.cluster.${clustername}
 			fi
+			touch /failover/configured-${localhostname}
 		fi
 	## handle failover
 	elif [ "$ROLE" == "failover" ]
 	then
 		LOG "configure symphony master failover..."
 		chown -R $CLUSTERADMIN /failover
+		while [ ! -f /failover/configured-${MASTERHOST} ]
+		do
+			echo "... waiting for master ${MASTERHOST} to configure"
+			sleep 30
+		done
+		sleep 60
 		LOG "\tsu $CLUSTERADMIN -c \". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig mghost /failover -f\""
 		su $CLUSTERADMIN -c ". ${SOURCE_PROFILE}; egoconfig join ${MASTERHOST} -f; egoconfig mghost /failover -f"
 		sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/named.xml
 		sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/wsg.xml
+		touch /failover/configured-${localhostname}
 	elif [ "$ROLE" == "compute" ]
 	then
 		LOG "configure symphony compute node ..."
@@ -369,29 +377,37 @@ then
 
 elif [ "${ROLE}" == 'master' ]
 then
-	if [ ! -f /etc/checkfailover ]
-	then
-		. ${SOURCE_PROFILE}
-		egosh user logon -u Admin -x Admin
-		while [ 1 -lt 2 ]
-		do
-			if su - $clusteradmin -c "egosh user logon -u Admin -x Admin" >/dev/null 2>&1
-			then
-				break
-			else
-				sleep 60
-			fi
-		done
-		echo -e "\t...logged on to ego" >> ${LOG_FILE}
-		if [ -d /failover ]
+	while [ 1 -lt 2 ]
+	do
+		if su - $clusteradmin -c "egosh user logon -u Admin -x Admin" >/dev/null 2>&1
 		then
-			mc=`echo $MASTERHOST | sed -e 's/0$/1/'`
-			sleep 300
-			if su - $clusteradmin -c "egosh user logon -u Admin -x Admin" >/dev/null 2>&1
-			then
-				su - $clusteradmin -c "egosh ego restart -f"
-			fi
+			break
+		else
+			sleep 60
 		fi
+	done
+	. ${SOURCE_PROFILE}
+	egosh user logon -u Admin -x Admin
+	echo -e "\t...logged on to ego" >> ${LOG_FILE}
+	if [ -d /failover ]
+	then
+		mc=`echo $MASTERHOST | sed -e 's/0$/1/'`
+		echo -e "\t...configuring failover" >> ${LOG_FILE}
+		. ${SOURCE_PROFILE}
+		while ! egosh resource list -l | grep "\$mc.*ok" | grep -v grep > /dev/null
+		do
+				echo ... waiting for service to come up \`date\` >> ${LOG_FILE}
+				sleep 20
+		done
+		su - $clusteradmin -c ". ${SOURCE_PROFILE}; egoconfig masterlist ${MASTERHOST},`echo ${MASTERHOST} | sed -e 's/0$/1/'` -f"
+		sleep 10
+		egosh ego restart -f
+		sleep 60
+		while ! egosh resource view \$mc | grep "resourceattr.*mg" | grep -v grep > /dev/null 2>&1
+		do
+				echo ... waiting for master candidata \$mc to become management host  >> ${LOG_FILE}
+				sleep 30
+		done
 	fi
 else
 	echo "nothing to do"
