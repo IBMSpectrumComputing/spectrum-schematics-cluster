@@ -330,6 +330,7 @@ function configure_symphony()
 		sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/named.xml
 		sed -i 's/AUTOMATIC/MANUAL/' /opt/ibm/spectrumcomputing/eservice/esc/conf/services/wsg.xml
 		touch /failover/configured-${localhostname}
+		sleep 120
 	elif [ "$ROLE" == "compute" ]
 	then
 		LOG "configure symphony compute node ..."
