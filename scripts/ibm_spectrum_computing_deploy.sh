@@ -161,6 +161,8 @@ function funcConnectFailoverService()
 			touch /failover/connected-${localhostname}
 			sleep 60
 		done
+		sed -i '/failover/d' /etc/fstab
+		echo -e "${nfsipaddress}:/failover\t/failover\tnfs\trsize=32768,wsize=32768\t2 2" >> /etc/fstab
 		LOG "\tmounted /failover ..."
 	fi
 }
