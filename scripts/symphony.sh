@@ -150,7 +150,7 @@ function app_depend()
 
 function download_packages()
 {
-	if [ "$MASTERHOSTNAMES" == "$MASTERHOST" ]
+	if [ 1 -lt 2 ]
 	then
 		# we can get the package from anywhere applicable, then export through nfs://export, not implemented here yet
 		LOG "download symphony packages ..."
@@ -161,7 +161,11 @@ function download_packages()
 		else
 			ver_in_pkg=${VERSION}
 		fi
-		if [ "$ROLE" == 'symde' ]
+		if [ -d /opt/ibm/spectrumcomputing ]
+		then
+			LOG "bypass downloading packages ..."
+			touch /export/download_finished
+		elif [ "$ROLE" == 'symde' ]
 		then
 			LOG "\twget -nH -c -o /dev/null -O symde-${ver_in_pkg}_x86_64.bin ${uri_package_additional}"
 			cd /export/symphony/${VERSION} && wget -nH -c --no-check-certificate -o /dev/null -O symde-${ver_in_pkg}_x86_64.bin ${uri_package_additional}
@@ -170,10 +174,6 @@ function download_packages()
 			wget -nH -c -o /dev/null -O /export/eclipse.tar.gz http://mirror.csclub.uwaterloo.ca/eclipse/technology/epp/downloads/release/luna/SR2/eclipse-java-luna-SR2-linux-gtk-x86_64.tar.gz
 			touch /export/eclipse && rm -fr /export/eclipse && cd /export && tar xf eclipse.tar.gz
 			cd /usr/bin && ln -sf /export/eclipse/eclipse .
-		elif [ -d /opt/ibm/spectrumcomputing ]
-		then
-			LOG "bypass downloading packages ..."
-			touch /export/download_finished
 		else
 			if [ "$ROLE" == 'master' ]
 			then
